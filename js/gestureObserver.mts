@@ -13,7 +13,8 @@ type PointType = {
     x: number | null;
     y: number | null;
     pinchLevel: number | null;
-    xDiff: number | null;
+    pinchLength: number | null;
+    startPinchLevel: number | null;
 };
 interface OnGestureParameter {
     observeElement: HTMLElement;
@@ -100,7 +101,8 @@ export class GestureObserver {
         x: null,
         y: null,
         pinchLevel: null,
-        xDiff: null,
+        pinchLength: null,
+        startPinchLevel: null,
     };
     protected primaryType: ObservePointerMode = null;
     protected onGeustreMode: OnGestureMode = null;
@@ -338,7 +340,13 @@ export class GestureObserver {
                 case 'pan-x':
                 case 'pan-y': {
                     const { x, y } = [...pointerInfoList.values()][0];
-                    return { x, y, pinchLevel: null, xDiff: null };
+                    return {
+                        x,
+                        y,
+                        pinchLevel: null,
+                        pinchLength: null,
+                        startPinchLevel: null,
+                    };
                 }
                 case 'pinch-zoom': {
                     const iterator = pointerList.values();
@@ -360,13 +368,13 @@ export class GestureObserver {
                     const maxY = Math.max(points[0].y, points[1].y);
                     const xDiff = maxX - minX;
                     const yDiff = maxY - minY;
-                    const lineLength = Math.sqrt(
+                    const pinchLength = Math.sqrt(
                         Math.pow(xDiff, 2) + Math.pow(yDiff, 2)
                     );
                     if (this.startPinchLevel === null) {
-                        this.startPinchLevel = lineLength;
+                        this.startPinchLevel = pinchLength;
                     }
-                    const pinchLevel = lineLength - this.startPinchLevel;
+                    const pinchLevel = pinchLength - this.startPinchLevel;
                     const { x, y } = {
                         x: minX + xDiff / 2,
                         y: minY + yDiff / 2,
@@ -387,11 +395,23 @@ export class GestureObserver {
                     spanA.style.top = `${points[0].y}px`;
                     spanB.style.left = `${points[1].x}px`;
                     spanB.style.top = `${points[1].y}px`;
-                    return { x, y, pinchLevel, xDiff: points[0].x };
+                    return {
+                        x,
+                        y,
+                        pinchLevel,
+                        pinchLength,
+                        startPinchLevel: this.startPinchLevel,
+                    };
                 }
             }
         }
-        return { x: null, y: null, pinchLevel: null, xDiff: null };
+        return {
+            x: null,
+            y: null,
+            pinchLevel: null,
+            pinchLength: null,
+            startPinchLevel: null,
+        };
     }
     protected setThresholdValue() {
         this.thresholdMinX = this.startPointX - this.threshold;

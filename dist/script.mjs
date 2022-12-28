@@ -24,13 +24,16 @@ const pointer = new GestureObserver((option, e, object) => {
     }, [])
         .join('\n')}\npoint : ${jsonBeutify(JSON.stringify(point)).replace('    ', '')}\npointer : ${jsonBeutify(JSON.stringify(pointer))}`;
     info.innerHTML = text;
-    diffList.push(point.xDiff);
+    diffList.push(point.pinchLevel);
     if (diffList.length > LNG) {
         diffList.shift();
     }
     if (other.gesture === 'pinch-zoom') {
+        console.log(point.startPinchLevel);
         diffList.forEach((item, idx, arr) => {
-            const level = item / 4;
+            const level = (((item + point.startPinchLevel) / point.startPinchLevel) *
+                50) /
+                1.5;
             list[idx].style.height = `${level}%`;
         });
     }
