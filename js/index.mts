@@ -70,7 +70,7 @@ function pinchZoomHandler(option: OnGestureParameter) {
 
     if (pointerRaw.every((item) => item.target === box)) {
         const scale = Math.max(
-            1,
+            0.5,
             (Number(box.getAttribute('data-scale')) || 1) + pinchMovement / 120
         );
         box.setAttribute('data-scale', scale.toFixed(3));

@@ -54,7 +54,7 @@ function pinchZoomHandler(option) {
     if (pinchMovement === null)
         return;
     if (pointerRaw.every((item) => item.target === box)) {
-        const scale = Math.max(1, (Number(box.getAttribute('data-scale')) || 1) + pinchMovement / 120);
+        const scale = Math.max(0.5, (Number(box.getAttribute('data-scale')) || 1) + pinchMovement / 120);
         box.setAttribute('data-scale', scale.toFixed(3));
         dragHandler(option);
     }
