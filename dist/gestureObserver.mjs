@@ -49,7 +49,9 @@ export class GestureObserver {
         const path = e.composedPath();
         requestAnimationFrame(() => {
             const { pointerId, pointerType, observeElement, target, offsetX, offsetY, } = this.pointerHandler(e, path);
-            if (observeElement !== undefined) {
+            if (observeElement !== undefined &&
+                (this.primaryType === e.pointerType ||
+                    this.primaryType === null)) {
                 if (e.isPrimary === true) {
                     this.primaryType = pointerType;
                 }
@@ -68,7 +70,7 @@ export class GestureObserver {
         const path = e.composedPath();
         requestAnimationFrame(() => {
             const { pointerId, pointerType, observeElement, target, offsetX, offsetY, } = this.pointerHandler(e, path);
-            if (this.isTab === true) {
+            if (this.isTab === true && this.primaryType === e.pointerType) {
                 this.pointerList.set(pointerId, e);
                 const { x, y } = this.findActualPoint(observeElement, target, offsetX, offsetY);
                 this.pointerInfoList.set(pointerId, { pointerType, x, y });
@@ -92,12 +94,12 @@ export class GestureObserver {
                 if (this.onGeustreMode !== null) {
                     this.onGesture({
                         gesture: this.onGeustreMode,
-                        observeElement,
-                        path,
+                        primaryType: this.primaryType,
                         isTab: this.isTab,
                         isEnd: this.isEnd,
                         pointer: [...this.pointerInfoList.values()],
-                        primaryType: this.primaryType,
+                        observeElement,
+                        path,
                     }, e, this);
                 }
             }
@@ -118,12 +120,12 @@ export class GestureObserver {
                 if (this.onGeustreMode !== null) {
                     this.onGesture({
                         gesture: this.onGeustreMode,
-                        observeElement,
-                        path,
+                        primaryType: this.primaryType,
                         isTab: this.isTab,
                         isEnd: this.isEnd,
                         pointer: [...this.pointerInfoList.values()],
-                        primaryType: this.primaryType,
+                        observeElement,
+                        path,
                     }, e, this);
                 }
                 this.primaryType = null;
