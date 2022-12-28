@@ -17,7 +17,7 @@ const info = document.querySelector('pre')! as HTMLElement;
 
 const grp = document.querySelector('article')! as HTMLElement;
 const item = document.createElement('span');
-item.style.backgroundColor = 'red';
+item.style.backgroundColor = 'gray';
 item.style.height = '0%';
 item.style.flex = '1';
 const LNG = 100;
