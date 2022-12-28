@@ -1,0 +1,189 @@
+export class GestureObserver {
+    onGesture;
+    observeGesture = new Set([
+        'pan-x',
+        'pan-y',
+        'pinch-zoom',
+        'double-tab',
+    ]);
+    observePointer = new Set(['mouse', 'touch', 'pen']);
+    threshold = 4 * devicePixelRatio;
+    pointerList = new Map();
+    pointerInfoList = new Map();
+    observeElements = new Set();
+    inited = false;
+    isTab = false;
+    onGeustreMode = null;
+    startPointX = 0;
+    startPointY = 0;
+    thresholdMinX = this.startPointX - this.threshold;
+    thresholdMaxX = this.startPointX + this.threshold;
+    thresholdMinY = this.startPointY - this.threshold;
+    thresholdMaxY = this.startPointY + this.threshold;
+    direction = 0;
+    pointerHandler = (e, path) => {
+        const { pointerId, pointerType, target, offsetX, offsetY } = e;
+        const observeElement = path.find((item) => this.observeElements.has(item));
+        this.pointerList.set(pointerId, e);
+        return {
+            pointerId,
+            pointerType,
+            observeElement,
+            target,
+            offsetX,
+            offsetY,
+        };
+    };
+    pointerDownHandler = (e) => {
+        const path = e.composedPath();
+        requestAnimationFrame(() => {
+            const { pointerId, pointerType, observeElement, target, offsetX, offsetY, } = this.pointerHandler(e, path);
+            if (observeElement === undefined)
+                return;
+            this.isTab = true;
+            const { x, y } = this.findActualPoint(observeElement, target, offsetX, offsetY);
+            this.pointerInfoList.set(pointerId, { x, y });
+            this.startPointX = x;
+            this.startPointY = y;
+            this.setThresholdValue();
+        });
+    };
+    pointerMoveHandler = (e) => {
+        const path = e.composedPath();
+        requestAnimationFrame(() => {
+            const { pointerId, pointerType, observeElement, target, offsetX, offsetY, } = this.pointerHandler(e, path);
+            if (observeElement === undefined)
+                return;
+            if (this.isTab) {
+                const { x, y } = this.findActualPoint(observeElement, target, offsetX, offsetY);
+                this.pointerInfoList.set(pointerId, { x, y });
+                if ((this.onGeustreMode === null ||
+                    this.onGeustreMode === 'pan-x') &&
+                    (this.thresholdMinX > x || this.thresholdMaxX < x) &&
+                    this.pointerList.size === 1) {
+                    this.onGeustreMode = 'pan-x';
+                }
+                if ((this.onGeustreMode === null ||
+                    this.onGeustreMode === 'pan-y') &&
+                    (this.thresholdMinY > y || this.thresholdMaxY < y) &&
+                    this.pointerList.size === 1) {
+                    this.onGeustreMode = 'pan-y';
+                }
+                if ((this.onGeustreMode === null ||
+                    this.onGeustreMode === 'pinch-zoom') &&
+                    this.pointerList.size > 1) {
+                    this.onGeustreMode = 'pinch-zoom';
+                }
+                if (this.onGeustreMode !== null) {
+                    this.onGesture({
+                        gesture: this.onGeustreMode,
+                        observeElement,
+                        isTab: this.isTab,
+                        isEnd: false,
+                        pointer: [...this.pointerInfoList.values()],
+                    }, e, this);
+                }
+            }
+        });
+    };
+    pointerUpHandler = (e) => {
+        const path = e.composedPath();
+        requestAnimationFrame(() => {
+            const { pointerId, pointerType, observeElement, target, offsetX, offsetY, } = this.pointerHandler(e, path);
+            if (observeElement === undefined)
+                return;
+            this.pointerList.delete(pointerId);
+            this.pointerInfoList.delete(pointerId);
+            if ((this.onGeustreMode !== 'pinch-zoom' &&
+                this.pointerList.size < 1) ||
+                (this.onGeustreMode === 'pinch-zoom' &&
+                    this.pointerList.size < 2)) {
+                this.isTab = false;
+                if (this.onGeustreMode !== null) {
+                    this.onGesture({
+                        gesture: this.onGeustreMode,
+                        observeElement,
+                        isTab: this.isTab,
+                        isEnd: true,
+                        pointer: [...this.pointerInfoList.values()],
+                    }, e, this);
+                }
+                this.startPointX = 0;
+                this.startPointY = 0;
+                this.setThresholdValue();
+                this.onGeustreMode = null;
+            }
+        });
+    };
+    wheelHandler = (e) => {
+        e.preventDefault();
+        const path = e.composedPath();
+        requestAnimationFrame(() => {
+            const { deltaY, target, offsetX, offsetY } = e;
+            const observeElement = path.find((item) => this.observeElements.has(item));
+            if (observeElement === undefined)
+                return;
+        });
+    };
+    findActualPoint(observeElement, target, offsetX, offsetY) {
+        let nowElement = target;
+        let value = { x: offsetX, y: offsetY };
+        while (nowElement !== observeElement) {
+            if (nowElement.parentElement === null)
+                break;
+            value.x += nowElement.offsetLeft;
+            value.y += nowElement.offsetTop;
+            nowElement = nowElement.parentElement;
+        }
+        return value;
+    }
+    setThresholdValue() {
+        this.thresholdMinX = this.startPointX - this.threshold;
+        this.thresholdMaxX = this.startPointX + this.threshold;
+        this.thresholdMinY = this.startPointY - this.threshold;
+        this.thresholdMaxY = this.startPointY + this.threshold;
+    }
+    constructor(onGesture, option = {}) {
+        const { observeGesture, observePointer, threshold } = option;
+        this.onGesture = onGesture;
+        if (observeGesture !== undefined)
+            this.observeGesture = new Set(observeGesture);
+        if (observePointer !== undefined)
+            this.observePointer = new Set(observePointer);
+        if (threshold !== undefined)
+            this.threshold = threshold;
+    }
+    init() {
+        globalThis.addEventListener('pointerdown', this.pointerDownHandler, {
+            passive: false,
+        });
+        globalThis.addEventListener('pointermove', this.pointerMoveHandler, {
+            passive: false,
+        });
+        globalThis.addEventListener('pointerup', this.pointerUpHandler, {
+            passive: false,
+        });
+        globalThis.addEventListener('wheel', this.wheelHandler, {
+            passive: false,
+        });
+        this.inited = true;
+    }
+    observe(element) {
+        if (this.inited === false) {
+            this.init();
+        }
+        this.observeElements.add(element);
+    }
+    unobserve(element) {
+        this.observeElements.delete(element);
+        if (this.observeElements.size === 0) {
+            this.disconnect();
+        }
+    }
+    disconnect() {
+        this.observeElements.clear();
+        globalThis.removeEventListener('pointerdown', this.pointerDownHandler);
+        globalThis.removeEventListener('wheel', this.wheelHandler);
+        this.inited = false;
+    }
+}
