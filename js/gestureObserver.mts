@@ -55,6 +55,7 @@ export interface OnGestureParameter {
         y: number;
         pointerType: ObservePointerType;
     }[];
+    pointerRaw: PointerEvent[];
     primaryType: ObservePointerMode;
     startTarget: EventTarget | null;
 }
@@ -322,6 +323,7 @@ export class GestureObserver {
                             isEnd: this.isEnd,
                             isIn: observeElement !== undefined,
                             pointer: [...this.pointerInfoList.values()],
+                            pointerRaw: [...this.pointerList.values()],
                             observeElement,
                             target,
                             startTarget: this.startTarget,
@@ -364,6 +366,7 @@ export class GestureObserver {
                             isEnd: this.isEnd,
                             isIn: observeElement !== undefined,
                             pointer: [...this.pointerInfoList.values()],
+                            pointerRaw: [...this.pointerList.values()],
                             observeElement,
                             target,
                             startTarget: this.startTarget,

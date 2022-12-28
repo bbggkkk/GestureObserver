@@ -2,9 +2,15 @@ import { GestureObserver, OnGestureParameter } from './gestureObserver.mjs';
 
 const wrap = document.getElementById('wrap')!;
 const box = document.getElementById('box')!;
+
+const span = document.querySelector('#touch')! as HTMLElement;
+const spanA = document.querySelector('.touchA')! as HTMLElement;
+const spanB = document.querySelector('.touchB')! as HTMLElement;
+
 const gestureObserver = new GestureObserver(
     (option) => {
-        const { gesture, point, isEnd, startTarget } = option;
+        const { gesture, point, isEnd, startTarget, pointer: points } = option;
+        const { x, y } = point;
         if (startTarget === box) {
             switch (gesture) {
                 case 'drag':
@@ -14,6 +20,19 @@ const gestureObserver = new GestureObserver(
                     pinchZoomHandler(option);
                     break;
             }
+        }
+
+        span.style.left = `${x}px`;
+        span.style.top = `${y}px`;
+
+        if (points[0] !== undefined) {
+            spanA.style.left = `${points[0].x}px`;
+            spanA.style.top = `${points[0].y}px`;
+        }
+
+        if (points[1] !== undefined) {
+            spanB.style.left = `${points[1].x}px`;
+            spanB.style.top = `${points[1].y}px`;
         }
     },
     {
@@ -45,14 +64,16 @@ function dragHandler(option: OnGestureParameter) {
     }
 }
 function pinchZoomHandler(option: OnGestureParameter) {
-    const { point, isEnd } = option;
+    const { point, pointerRaw } = option;
     const { pinchMovement } = point;
     if (pinchMovement === null) return;
-    const scale = Math.max(
-        1,
-        (Number(box.getAttribute('data-scale')) || 1) + pinchMovement / 120
-    );
-    console.log(scale);
-    box.setAttribute('data-scale', scale.toFixed(3));
-    dragHandler(option);
+
+    if (pointerRaw.every((item) => item.target === box)) {
+        const scale = Math.max(
+            1,
+            (Number(box.getAttribute('data-scale')) || 1) + pinchMovement / 120
+        );
+        box.setAttribute('data-scale', scale.toFixed(3));
+        dragHandler(option);
+    }
 }

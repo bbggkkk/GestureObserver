@@ -29,6 +29,7 @@ html, body {
 }
 
 #box {
+  z-index: 0;
   width: 120px;
   height: 120px;
   background: #1167AB;
