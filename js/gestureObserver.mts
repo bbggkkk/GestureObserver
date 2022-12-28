@@ -19,6 +19,8 @@ type PointType = {
     travelX: number | null;
     travelY: number | null;
     travel: number | null;
+    tiltX: number | null;
+    tiltY: number | null;
     pinchLevel: number | null;
     pinchLength: number | null;
     pinchLevelStart: number | null;
@@ -87,6 +89,26 @@ function findSet(
     }
     return null;
 }
+
+const DEFAULT_LAST_POINT: PointType = {
+    x: null,
+    y: null,
+    movementX: null,
+    movementY: null,
+    distanceX: null,
+    distanceY: null,
+    travelX: null,
+    travelY: null,
+    travel: null,
+    tiltX: null,
+    tiltY: null,
+    pinchLevel: null,
+    pinchLength: null,
+    pinchLevelStart: null,
+    rotate: null,
+    rotateAbsolute: null,
+    rotateStart: null,
+};
 export class GestureObserver {
     protected onGesture: OnGestureType;
     protected observeGesture = new Set([
@@ -112,23 +134,7 @@ export class GestureObserver {
 
     protected isTab = false;
     protected isEnd = true;
-    protected lastPoint: PointType = {
-        x: null,
-        y: null,
-        movementX: null,
-        movementY: null,
-        distanceX: null,
-        distanceY: null,
-        travelX: null,
-        travelY: null,
-        travel: null,
-        pinchLevel: null,
-        pinchLength: null,
-        pinchLevelStart: null,
-        rotate: null,
-        rotateAbsolute: null,
-        rotateStart: null,
-    };
+    protected lastPoint: PointType = DEFAULT_LAST_POINT;
     protected primaryType: ObservePointerMode = null;
     protected onGeustreMode: OnGestureMode = null;
     protected pinchLevel: number | null = null;
@@ -329,23 +335,7 @@ export class GestureObserver {
                 this.startPointY = 0;
                 this.pinchLevelStart = null;
                 this.rotateStart = null;
-                this.lastPoint = {
-                    x: null,
-                    y: null,
-                    movementX: null,
-                    movementY: null,
-                    distanceX: null,
-                    distanceY: null,
-                    travelX: null,
-                    travelY: null,
-                    travel: null,
-                    pinchLevel: null,
-                    pinchLength: null,
-                    pinchLevelStart: null,
-                    rotate: null,
-                    rotateAbsolute: null,
-                    rotateStart: null,
-                };
+                this.lastPoint = DEFAULT_LAST_POINT;
                 this.setThresholdValue();
                 this.onGeustreMode = null;
             }
@@ -440,6 +430,7 @@ export class GestureObserver {
                 case 'pan-x':
                 case 'pan-y': {
                     const { x, y } = [...pointerInfoList.values()][0];
+                    const { tiltX, tiltY } = [...pointerList.values()][0];
                     const moveX =
                         this.lastPoint.x === null ? 0 : x - this.lastPoint.x;
                     const moveY =
@@ -452,7 +443,7 @@ export class GestureObserver {
                         this.lastPoint.travelY === null
                             ? Math.abs(moveY)
                             : this.lastPoint.travelY + Math.abs(moveY);
-                    return {
+                    return Object.assign(DEFAULT_LAST_POINT, {
                         x,
                         y,
                         movementX: moveX,
@@ -464,13 +455,9 @@ export class GestureObserver {
                         travel:
                             (this.lastPoint.travel || 0) +
                             Math.sqrt(Math.pow(moveX, 2) + Math.pow(moveY, 2)),
-                        pinchLevel: null,
-                        pinchLength: null,
-                        pinchLevelStart: null,
-                        rotate: null,
-                        rotateAbsolute: null,
-                        rotateStart: null,
-                    };
+                        tiltX,
+                        tiltY,
+                    });
                 }
                 case 'pinch-zoom': {
                     const iterator = pointerList.values();
@@ -542,7 +529,7 @@ export class GestureObserver {
                         this.lastPoint.travelY === null
                             ? Math.abs(moveY)
                             : this.lastPoint.travelY + Math.abs(moveY);
-                    return {
+                    return Object.assign(DEFAULT_LAST_POINT, {
                         x,
                         y,
                         movementX: moveX,
@@ -560,27 +547,11 @@ export class GestureObserver {
                         rotate: rotate,
                         rotateAbsolute,
                         rotateStart: this.rotateStart,
-                    };
+                    });
                 }
             }
         }
-        return {
-            x: null,
-            y: null,
-            movementX: null,
-            movementY: null,
-            distanceX: null,
-            distanceY: null,
-            travelX: null,
-            travelY: null,
-            travel: null,
-            pinchLevel: null,
-            pinchLength: null,
-            pinchLevelStart: null,
-            rotate: null,
-            rotateAbsolute: null,
-            rotateStart: null,
-        };
+        return DEFAULT_LAST_POINT;
     }
     protected setThresholdValue() {
         this.thresholdMinX = this.startPointX - this.threshold;
