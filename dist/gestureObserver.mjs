@@ -20,6 +20,10 @@ const DEFAULT_LAST_POINT = {
     travel: null,
     tiltX: null,
     tiltY: null,
+    altKey: false,
+    ctrlKey: false,
+    shiftKey: false,
+    metaKey: false,
     pinchLevel: null,
     pinchLength: null,
     pinchLevelStart: null,
@@ -104,6 +108,7 @@ export class GestureObserver {
         const path = e.composedPath();
         requestAnimationFrame(() => {
             const { pointerId, pointerType, observeElement, target, clientX, clientY, } = this.pointerHandler(e, path);
+            console.log(e);
             if (this.observePointer.has(pointerType) &&
                 this.isTab === true &&
                 this.primaryType === e.pointerType) {
@@ -222,7 +227,7 @@ export class GestureObserver {
                 case 'pan-x':
                 case 'pan-y': {
                     const { x, y } = [...pointerInfoList.values()][0];
-                    const { tiltX, tiltY } = [...pointerList.values()][0];
+                    const { tiltX, tiltY, altKey, ctrlKey, metaKey, shiftKey } = [...pointerList.values()][0];
                     const moveX = this.lastPoint.x === null ? 0 : x - this.lastPoint.x;
                     const moveY = this.lastPoint.y === null ? 0 : y - this.lastPoint.y;
                     const travelX = this.lastPoint.travelX === null
@@ -244,6 +249,10 @@ export class GestureObserver {
                             Math.sqrt(Math.pow(moveX, 2) + Math.pow(moveY, 2)),
                         tiltX,
                         tiltY,
+                        altKey,
+                        ctrlKey,
+                        metaKey,
+                        shiftKey,
                     });
                 }
                 case 'pinch-zoom': {
@@ -253,6 +262,7 @@ export class GestureObserver {
                         iterator.next().value,
                     ];
                     const points = touchs.map((item) => this.findActualPoint(item.pointerId, item.clientX, item.clientY));
+                    const { altKey, ctrlKey, metaKey, shiftKey } = touchs[0];
                     const minX = Math.min(points[0].x, points[1].x);
                     const maxX = Math.max(points[0].x, points[1].x);
                     const minY = Math.min(points[0].y, points[1].y);
@@ -303,6 +313,10 @@ export class GestureObserver {
                         travelY,
                         travel: (this.lastPoint.travel || 0) +
                             Math.sqrt(Math.pow(moveX, 2) + Math.pow(moveY, 2)),
+                        altKey,
+                        ctrlKey,
+                        metaKey,
+                        shiftKey,
                         pinchLevel,
                         pinchLength,
                         pinchLevelStart: this.pinchLevelStart,
