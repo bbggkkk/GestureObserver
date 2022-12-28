@@ -16,14 +16,7 @@ const main = document.querySelector('main')!;
 const info = document.querySelector('pre')! as HTMLElement;
 
 const pointer = new GestureObserver((option, e, object) => {
-    const { pointer, ...other }: any = option;
-    // console.log(
-    //     Object.keys(other).reduce((acc: string[], item) => {
-    //         const text = `${item} : <span style="color:teal; font-weight:bold;">${other[item]}`;
-    //         acc.push(text);
-    //         return acc;
-    //     }, [])
-    // );
+    const { point, pointer, ...other }: any = option;
     const text = `${Object.keys(other)
         .reduce((acc: string[], item) => {
             const text = `${item} : <span style="color:${
@@ -32,7 +25,10 @@ const pointer = new GestureObserver((option, e, object) => {
             acc.push(text);
             return acc;
         }, [])
-        .join('\n')}\npointer : ${jsonBeutify(JSON.stringify(pointer))}`;
+        .join('\n')}\npoint : ${jsonBeutify(JSON.stringify(point)).replace(
+        '    ',
+        ''
+    )}\npointer : ${jsonBeutify(JSON.stringify(pointer))}`;
     info.innerHTML = text;
 });
 pointer.observe(main);

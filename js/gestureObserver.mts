@@ -11,9 +11,11 @@ type ObservePointerMode = 'mouse' | 'touch' | 'pen' | null;
 type ObservePointerType = Exclude<ObservePointerMode, null>;
 interface OnGestureParameter {
     observeElement: HTMLElement;
+    point: { x: number; y: number };
     path: EventTarget[];
     isTab: boolean;
     isEnd: boolean;
+    isIn: boolean;
     gesture: ObserveGestureType;
     pointer: {
         x: number;
@@ -198,8 +200,10 @@ export class GestureObserver {
                         {
                             gesture: this.onGeustreMode,
                             primaryType: this.primaryType,
+                            point: this.getPoint(),
                             isTab: this.isTab,
                             isEnd: this.isEnd,
+                            isIn: observeElement !== undefined,
                             pointer: [...this.pointerInfoList.values()],
                             observeElement,
                             path,
@@ -240,8 +244,10 @@ export class GestureObserver {
                         {
                             gesture: this.onGeustreMode,
                             primaryType: this.primaryType,
+                            point: this.getPoint(),
                             isTab: this.isTab,
                             isEnd: this.isEnd,
+                            isIn: observeElement !== undefined,
                             pointer: [...this.pointerInfoList.values()],
                             observeElement,
                             path,
@@ -293,6 +299,25 @@ export class GestureObserver {
         }
         return value;
     }
+    protected getPoint() {
+        if (this.pointerInfoList.size > 0) {
+            const pointerList = this.pointerList;
+            const pointerInfoList = this.pointerInfoList;
+            switch (this.onGeustreMode) {
+                case 'pan-x':
+                case 'pan-y':
+                    const { x, y } = [...pointerInfoList.values()][0];
+                    return { x, y };
+                    break;
+                case 'pinch-zoom':
+                    const iterator = pointerList.values();
+                    const touchA = iterator.next().value;
+                    const touchB = iterator.next().value;
+                    break;
+            }
+        }
+        return { x: 0, y: 0 };
+    }
     protected setThresholdValue() {
         this.thresholdMinX = this.startPointX - this.threshold;
         this.thresholdMaxX = this.startPointX + this.threshold;
@@ -323,6 +348,9 @@ export class GestureObserver {
             passive: false,
         });
         globalThis.addEventListener('pointerup', this.pointerUpHandler, {
+            passive: false,
+        });
+        globalThis.addEventListener('pointercancel', this.pointerUpHandler, {
             passive: false,
         });
         // globalThis.addEventListener('wheel', this.wheelHandler, {
