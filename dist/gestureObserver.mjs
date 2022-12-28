@@ -17,7 +17,7 @@ export class GestureObserver {
         'double-tab',
     ]);
     observePointer = new Set(['mouse', 'touch', 'pen']);
-    threshold = 4 * devicePixelRatio;
+    threshold = 100 * devicePixelRatio;
     pointerList = new Map();
     pointerInfoList = new Map();
     observeElements = new Set();
@@ -59,7 +59,7 @@ export class GestureObserver {
     pointerDownHandler = (e) => {
         const path = e.composedPath();
         requestAnimationFrame(() => {
-            const { pointerId, pointerType, observeElement, target, offsetX, offsetY, clientX, clientY, } = this.pointerHandler(e, path);
+            const { pointerId, pointerType, observeElement, clientX, clientY } = this.pointerHandler(e, path);
             if (observeElement !== undefined &&
                 (this.primaryType === e.pointerType ||
                     this.primaryType === null)) {
@@ -69,7 +69,7 @@ export class GestureObserver {
                 this.isTab = true;
                 this.isEnd = false;
                 this.pointerList.set(pointerId, e);
-                const { x, y } = this.findActualPoint(pointerId, clientX, clientY);
+                const { x, y } = this.findActualPoint(pointerId, clientX, clientY, observeElement);
                 this.pointerInfoList.set(pointerId, {
                     pointerType,
                     x,
@@ -85,7 +85,7 @@ export class GestureObserver {
     pointerMoveHandler = (e) => {
         const path = e.composedPath();
         requestAnimationFrame(() => {
-            const { pointerId, pointerType, observeElement, target, offsetX, offsetY, clientX, clientY, } = this.pointerHandler(e, path);
+            const { pointerId, pointerType, observeElement, target, clientX, clientY, } = this.pointerHandler(e, path);
             if (this.isTab === true && this.primaryType === e.pointerType) {
                 this.pointerList.set(pointerId, e);
                 const { x, y } = this.findActualPoint(pointerId, clientX, clientY);
@@ -133,7 +133,7 @@ export class GestureObserver {
     pointerUpHandler = (e) => {
         const path = e.composedPath();
         requestAnimationFrame(() => {
-            const { pointerId, pointerType, observeElement, target, offsetX, offsetY, } = this.pointerHandler(e, path);
+            const { pointerId, observeElement, target } = this.pointerHandler(e, path);
             this.pointerList.delete(pointerId);
             this.pointerInfoList.delete(pointerId);
             if ((this.onGeustreMode !== 'pinch-zoom' &&
@@ -175,8 +175,9 @@ export class GestureObserver {
                 return;
         });
     };
-    findActualPoint(pointerId, clientX, clientY) {
-        const targetElement = this.pointerInfoList.get(pointerId)?.observeElement;
+    findActualPoint(pointerId, clientX, clientY, observeElement) {
+        const targetElement = this.pointerInfoList.get(pointerId)?.observeElement ||
+            observeElement;
         let value = { x: clientX, y: clientY };
         if (targetElement !== undefined) {
             const { x: nx, y: ny } = targetElement.getBoundingClientRect();

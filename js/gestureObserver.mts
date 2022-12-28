@@ -86,7 +86,7 @@ export class GestureObserver {
         'double-tab',
     ]);
     protected observePointer = new Set(['mouse', 'touch', 'pen']);
-    protected threshold = 4 * devicePixelRatio;
+    protected threshold = 100 * devicePixelRatio;
     protected pointerList: Map<number, PointerEvent> = new Map();
     protected pointerInfoList: Map<
         number,
@@ -151,16 +151,8 @@ export class GestureObserver {
     protected pointerDownHandler = (e: PointerEvent) => {
         const path = e.composedPath();
         requestAnimationFrame(() => {
-            const {
-                pointerId,
-                pointerType,
-                observeElement,
-                target,
-                offsetX,
-                offsetY,
-                clientX,
-                clientY,
-            } = this.pointerHandler(e, path);
+            const { pointerId, pointerType, observeElement, clientX, clientY } =
+                this.pointerHandler(e, path);
             if (
                 observeElement !== undefined &&
                 (this.primaryType === e.pointerType ||
@@ -175,7 +167,8 @@ export class GestureObserver {
                 const { x, y } = this.findActualPoint(
                     pointerId,
                     clientX,
-                    clientY
+                    clientY,
+                    observeElement
                 );
                 this.pointerInfoList.set(pointerId, {
                     pointerType,
@@ -197,8 +190,6 @@ export class GestureObserver {
                 pointerType,
                 observeElement,
                 target,
-                offsetX,
-                offsetY,
                 clientX,
                 clientY,
             } = this.pointerHandler(e, path);
@@ -265,14 +256,10 @@ export class GestureObserver {
     protected pointerUpHandler = (e: PointerEvent) => {
         const path = e.composedPath();
         requestAnimationFrame(() => {
-            const {
-                pointerId,
-                pointerType,
-                observeElement,
-                target,
-                offsetX,
-                offsetY,
-            } = this.pointerHandler(e, path);
+            const { pointerId, observeElement, target } = this.pointerHandler(
+                e,
+                path
+            );
             // if (observeElement === undefined) return;
             this.pointerList.delete(pointerId);
             this.pointerInfoList.delete(pointerId);
@@ -335,20 +322,21 @@ export class GestureObserver {
     protected findActualPoint(
         pointerId: number,
         clientX: number,
-        clientY: number
+        clientY: number,
+        observeElement?: HTMLElement
     ) {
         const targetElement =
-            this.pointerInfoList.get(pointerId)?.observeElement;
+            this.pointerInfoList.get(pointerId)?.observeElement ||
+            observeElement;
         let value = { x: clientX, y: clientY };
+        // console.log(targetElement);
         if (targetElement !== undefined) {
             // const { x: lx, y: ly } =
             //     document.documentElement.getBoundingClientRect();
             const { x: nx, y: ny } = targetElement.getBoundingClientRect();
+            // console.log(nx, ny);
             value.x -= nx;
             value.y -= ny;
-            // while (nowElement?.parentElement !== null) {
-            //     nowElement = nowElement.parentElement;
-            // }
         }
 
         // let nowElement = target;
