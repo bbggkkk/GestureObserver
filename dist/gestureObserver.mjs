@@ -43,7 +43,7 @@ export class GestureObserver {
     thresholdMaxY = this.startPointY + this.threshold;
     direction = 0;
     pointerHandler = (e, path) => {
-        const { pointerId, pointerType, target, offsetX, offsetY } = e;
+        const { pointerId, pointerType, target, offsetX, offsetY, clientX, clientY, } = e;
         const observeElement = path.find((item) => this.observeElements.has(item));
         return {
             pointerId,
@@ -52,12 +52,14 @@ export class GestureObserver {
             target,
             offsetX,
             offsetY,
+            clientX,
+            clientY,
         };
     };
     pointerDownHandler = (e) => {
         const path = e.composedPath();
         requestAnimationFrame(() => {
-            const { pointerId, pointerType, observeElement, target, offsetX, offsetY, } = this.pointerHandler(e, path);
+            const { pointerId, pointerType, observeElement, target, offsetX, offsetY, clientX, clientY, } = this.pointerHandler(e, path);
             if (observeElement !== undefined &&
                 (this.primaryType === e.pointerType ||
                     this.primaryType === null)) {
@@ -67,7 +69,7 @@ export class GestureObserver {
                 this.isTab = true;
                 this.isEnd = false;
                 this.pointerList.set(pointerId, e);
-                const { x, y } = this.findActualPoint(pointerId, observeElement, target, offsetX, offsetY);
+                const { x, y } = this.findActualPoint(pointerId, clientX, clientY);
                 this.pointerInfoList.set(pointerId, {
                     pointerType,
                     x,
@@ -83,10 +85,10 @@ export class GestureObserver {
     pointerMoveHandler = (e) => {
         const path = e.composedPath();
         requestAnimationFrame(() => {
-            const { pointerId, pointerType, observeElement, target, offsetX, offsetY, } = this.pointerHandler(e, path);
+            const { pointerId, pointerType, observeElement, target, offsetX, offsetY, clientX, clientY, } = this.pointerHandler(e, path);
             if (this.isTab === true && this.primaryType === e.pointerType) {
                 this.pointerList.set(pointerId, e);
-                const { x, y } = this.findActualPoint(pointerId, observeElement, target, offsetX, offsetY);
+                const { x, y } = this.findActualPoint(pointerId, clientX, clientY);
                 this.pointerInfoList.set(pointerId, {
                     pointerType,
                     x,
@@ -173,37 +175,13 @@ export class GestureObserver {
                 return;
         });
     };
-    findActualPoint(pointerId, observeElement, target, offsetX, offsetY) {
-        let nowElement = target;
-        let value = { x: offsetX, y: offsetY };
-        if (observeElement !== undefined) {
-            while (nowElement !== observeElement) {
-                if (!nowElement.parentElement ||
-                    nowElement.parentElement === document.body) {
-                    break;
-                }
-                value.x += nowElement.offsetLeft;
-                value.y += nowElement.offsetTop;
-                nowElement = nowElement.parentElement;
-            }
-        }
-        else {
-            const targetElement = this.pointerInfoList.get(pointerId)?.observeElement;
-            if (targetElement !== undefined) {
-                nowElement = targetElement;
-                let lastElement = targetElement;
-                do {
-                    if (!nowElement.parentElement) {
-                        break;
-                    }
-                    nowElement = nowElement.parentElement;
-                    const { x: lx, y: ly } = lastElement.getBoundingClientRect();
-                    const { x: nx, y: ny } = nowElement.getBoundingClientRect();
-                    value.x -= lx - nx;
-                    value.y -= ly - ny;
-                    lastElement = nowElement;
-                } while (nowElement !== target);
-            }
+    findActualPoint(pointerId, clientX, clientY) {
+        const targetElement = this.pointerInfoList.get(pointerId)?.observeElement;
+        let value = { x: clientX, y: clientY };
+        if (targetElement !== undefined) {
+            const { x: nx, y: ny } = targetElement.getBoundingClientRect();
+            value.x -= nx;
+            value.y -= ny;
         }
         return value;
     }
@@ -232,7 +210,7 @@ export class GestureObserver {
                         iterator.next().value,
                         iterator.next().value,
                     ];
-                    const points = touchs.map((item) => this.findActualPoint(item.pointerId, observeElement, item.target, item.offsetX, item.offsetY));
+                    const points = touchs.map((item) => this.findActualPoint(item.pointerId, item.clientX, item.clientY));
                     const minX = Math.min(points[0].x, points[1].x);
                     const maxX = Math.max(points[0].x, points[1].x);
                     const minY = Math.min(points[0].y, points[1].y);

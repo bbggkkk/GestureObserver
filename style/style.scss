@@ -12,13 +12,14 @@ p, div {
     bottom:0; right:0;
 }
 div {
+    border-bottom-right-radius: 3vmin;
+    overflow: hidden;
     background:green;
 }
 span{
     pointer-events: none;
 }
 section{
-    overflow:hidden;
     border-radius:3vmin;
     box-shadow:0 16px 32px rgba(0,0,0,0.1);
     background:white;
