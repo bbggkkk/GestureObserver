@@ -384,7 +384,7 @@ export class GestureObserver {
                     spanA.style.top = `${points[0].y}px`;
                     spanB.style.left = `${points[1].x}px`;
                     spanB.style.top = `${points[1].y}px`;
-                    return { x, y, pinchLevel, xDiff: points[1].y };
+                    return { x, y, pinchLevel, xDiff };
                 }
                 // console.log(points);
             }
