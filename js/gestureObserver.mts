@@ -86,7 +86,7 @@ export class GestureObserver {
         'double-tab',
     ]);
     protected observePointer = new Set(['mouse', 'touch', 'pen']);
-    protected threshold = 100 * devicePixelRatio;
+    protected threshold = 4 * devicePixelRatio;
     protected pointerList: Map<number, PointerEvent> = new Map();
     protected pointerInfoList: Map<
         number,
