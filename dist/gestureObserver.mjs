@@ -24,10 +24,18 @@ export class GestureObserver {
     inited = false;
     isTab = false;
     isEnd = true;
+    lastPoint = {
+        x: null,
+        y: null,
+        pinchLevel: null,
+        xDiff: null,
+    };
     primaryType = null;
     onGeustreMode = null;
+    pinchLevel = null;
     startPointX = 0;
     startPointY = 0;
+    startPinchLevel = null;
     thresholdMinX = this.startPointX - this.threshold;
     thresholdMaxX = this.startPointX + this.threshold;
     thresholdMinY = this.startPointY - this.threshold;
@@ -92,15 +100,17 @@ export class GestureObserver {
                     this.onGeustreMode = 'pinch-zoom';
                 }
                 if (this.onGeustreMode !== null) {
+                    this.lastPoint = this.getPoint(observeElement, target);
                     this.onGesture({
                         gesture: this.onGeustreMode,
                         primaryType: this.primaryType,
-                        point: this.getPoint(),
+                        point: this.lastPoint,
                         isTab: this.isTab,
                         isEnd: this.isEnd,
                         isIn: observeElement !== undefined,
                         pointer: [...this.pointerInfoList.values()],
                         observeElement,
+                        target,
                         path,
                     }, e, this);
                 }
@@ -123,18 +133,20 @@ export class GestureObserver {
                     this.onGesture({
                         gesture: this.onGeustreMode,
                         primaryType: this.primaryType,
-                        point: this.getPoint(),
+                        point: this.lastPoint,
                         isTab: this.isTab,
                         isEnd: this.isEnd,
                         isIn: observeElement !== undefined,
                         pointer: [...this.pointerInfoList.values()],
                         observeElement,
+                        target,
                         path,
                     }, e, this);
                 }
                 this.primaryType = null;
                 this.startPointX = 0;
                 this.startPointY = 0;
+                this.startPinchLevel = null;
                 this.setThresholdValue();
                 this.onGeustreMode = null;
             }
@@ -162,27 +174,55 @@ export class GestureObserver {
         }
         return value;
     }
-    getPoint() {
-        if (this.pointerInfoList.size > 0) {
+    getPoint(observeElement, target) {
+        if ((this.pointerInfoList.size > 0 &&
+            this.onGeustreMode !== 'pinch-zoom') ||
+            (this.pointerInfoList.size > 1 &&
+                this.onGeustreMode === 'pinch-zoom')) {
             const pointerList = this.pointerList;
             const pointerInfoList = this.pointerInfoList;
             switch (this.onGeustreMode) {
                 case 'pan-x':
-                case 'pan-y':
+                case 'pan-y': {
                     const { x, y } = [...pointerInfoList.values()][0];
-                    return { x, y };
-                    break;
-                case 'pinch-zoom':
+                    return { x, y, pinchLevel: null, xDiff: null };
+                }
+                case 'pinch-zoom': {
                     const iterator = pointerList.values();
                     const touchs = [
                         iterator.next().value,
                         iterator.next().value,
                     ];
-                    console.log(touchs);
-                    break;
+                    const points = touchs.map((item) => this.findActualPoint(observeElement, target, item.offsetX, item.offsetY));
+                    const minX = Math.min(points[0].x, points[1].x);
+                    const maxX = Math.max(points[0].x, points[1].x);
+                    const minY = Math.min(points[0].y, points[1].y);
+                    const maxY = Math.max(points[0].y, points[1].y);
+                    const xDiff = maxX - minX;
+                    const yDiff = maxY - minY;
+                    const lineLength = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff, 2));
+                    if (this.startPinchLevel === null) {
+                        this.startPinchLevel = lineLength;
+                    }
+                    const pinchLevel = lineLength - this.startPinchLevel;
+                    const { x, y } = {
+                        x: minX + xDiff / 2,
+                        y: minY + yDiff / 2,
+                    };
+                    const span = document.querySelector('#touch');
+                    const spanA = document.querySelector('.touchA');
+                    const spanB = document.querySelector('.touchB');
+                    span.style.left = `${x}px`;
+                    span.style.top = `${y}px`;
+                    spanA.style.left = `${points[0].x}px`;
+                    spanA.style.top = `${points[0].y}px`;
+                    spanB.style.left = `${points[1].x}px`;
+                    spanB.style.top = `${points[1].y}px`;
+                    return { x, y, pinchLevel, xDiff };
+                }
             }
         }
-        return { x: 0, y: 0 };
+        return { x: null, y: null, pinchLevel: null, xDiff: null };
     }
     setThresholdValue() {
         this.thresholdMinX = this.startPointX - this.threshold;

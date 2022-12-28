@@ -1,6 +1,19 @@
 import { GestureObserver } from './gestureObserver.mjs';
-const main = document.querySelector('main');
+const main = document.querySelector('section');
 const info = document.querySelector('pre');
+const grp = document.querySelector('article');
+const item = document.createElement('span');
+item.style.backgroundColor = 'red';
+item.style.height = '0%';
+item.style.flex = '1';
+const LNG = 100;
+const list = new Array(LNG)
+    .fill(null)
+    .map((nu) => item.cloneNode());
+list.forEach((item) => {
+    grp.appendChild(item);
+});
+const diffList = [];
 const pointer = new GestureObserver((option, e, object) => {
     const { point, pointer, ...other } = option;
     const text = `${Object.keys(other)
@@ -11,6 +24,17 @@ const pointer = new GestureObserver((option, e, object) => {
     }, [])
         .join('\n')}\npoint : ${jsonBeutify(JSON.stringify(point)).replace('    ', '')}\npointer : ${jsonBeutify(JSON.stringify(pointer))}`;
     info.innerHTML = text;
+    diffList.push(point.xDiff);
+    if (diffList.length > LNG) {
+        diffList.shift();
+    }
+    if (other.gesture === 'pinch-zoom') {
+        console.log(diffList.map((item) => item));
+        diffList.forEach((item, idx, arr) => {
+            const level = item / 4;
+            list[idx].style.height = `${level}%`;
+        });
+    }
 });
 pointer.observe(main);
 console.log(pointer);
