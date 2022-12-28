@@ -5,6 +5,9 @@ html, body, p, section {
     width:100%; height:100%;
     position: relative;
 }
+// body,html {
+//     overflow: hidden;
+// }
 p, div {
     position: absolute;
     width:50%; height:50%;

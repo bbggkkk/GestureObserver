@@ -11,6 +11,8 @@ function findSet(set, callback) {
 const DEFAULT_LAST_POINT = {
     x: null,
     y: null,
+    pointXStart: null,
+    pointYStart: null,
     movementX: null,
     movementY: null,
     distanceX: null,
@@ -33,12 +35,7 @@ const DEFAULT_LAST_POINT = {
 };
 export class GestureObserver {
     onGesture;
-    observeGesture = new Set([
-        'pan-x',
-        'pan-y',
-        'pinch-zoom',
-        'double-tab',
-    ]);
+    observeGesture = new Set(['drag', 'pinch-zoom', 'double-tab']);
     observePointer = new Set(['mouse', 'touch', 'pen']);
     threshold = 4 * devicePixelRatio;
     pointerList = new Map();
@@ -119,25 +116,55 @@ export class GestureObserver {
                     y,
                     observeElement: this.pointerInfoList.get(pointerId).observeElement,
                 });
-                if (this.observeGesture.has('pan-x') &&
-                    (this.onGeustreMode === null ||
-                        this.onGeustreMode === 'pan-x') &&
-                    (this.thresholdMinX > x || this.thresholdMaxX < x) &&
+                if ((this.thresholdMinX > x || this.thresholdMaxX < x) &&
                     this.pointerList.size === 1) {
-                    this.onGeustreMode = 'pan-x';
+                    if (this.observeGesture.has('pan-x') &&
+                        (this.onGeustreMode === null ||
+                            this.onGeustreMode === 'pan-x')) {
+                        this.onGeustreMode = 'pan-x';
+                    }
+                    else if (this.observeGesture.has('drag') &&
+                        (this.onGeustreMode === null ||
+                            this.onGeustreMode === 'drag')) {
+                        this.onGeustreMode = 'drag';
+                    }
+                    if (this.lastPoint.pointXStart === null) {
+                        this.lastPoint = Object.assign({}, this.lastPoint, {
+                            pointXStart: x,
+                            pointYStart: y,
+                        });
+                    }
                 }
-                if (this.observeGesture.has('pan-y') &&
-                    (this.onGeustreMode === null ||
-                        this.onGeustreMode === 'pan-y') &&
-                    (this.thresholdMinY > y || this.thresholdMaxY < y) &&
+                if ((this.thresholdMinY > y || this.thresholdMaxY < y) &&
                     this.pointerList.size === 1) {
-                    this.onGeustreMode = 'pan-y';
+                    if (this.observeGesture.has('pan-y') &&
+                        (this.onGeustreMode === null ||
+                            this.onGeustreMode === 'pan-y')) {
+                        this.onGeustreMode = 'pan-y';
+                    }
+                    else if (this.observeGesture.has('drag') &&
+                        (this.onGeustreMode === null ||
+                            this.onGeustreMode === 'drag')) {
+                        this.onGeustreMode = 'drag';
+                    }
+                    if (this.lastPoint.pointXStart === null) {
+                        this.lastPoint = Object.assign({}, this.lastPoint, {
+                            pointXStart: x,
+                            pointYStart: y,
+                        });
+                    }
                 }
                 if (this.observeGesture.has('pinch-zoom') &&
                     (this.onGeustreMode === null ||
                         this.onGeustreMode === 'pinch-zoom') &&
                     this.pointerList.size > 1) {
                     this.onGeustreMode = 'pinch-zoom';
+                    if (this.lastPoint.pointXStart === null) {
+                        this.lastPoint = Object.assign({}, this.lastPoint, {
+                            pointXStart: x,
+                            pointYStart: y,
+                        });
+                    }
                 }
                 if (this.onGeustreMode !== null) {
                     this.lastPoint = this.getPoint(observeElement);
@@ -223,6 +250,7 @@ export class GestureObserver {
             const pointerList = this.pointerList;
             const pointerInfoList = this.pointerInfoList;
             switch (this.onGeustreMode) {
+                case 'drag':
                 case 'pan-x':
                 case 'pan-y': {
                     const { x, y } = [...pointerInfoList.values()][0];
@@ -235,9 +263,11 @@ export class GestureObserver {
                     const travelY = this.lastPoint.travelY === null
                         ? Math.abs(moveY)
                         : this.lastPoint.travelY + Math.abs(moveY);
-                    return Object.assign(DEFAULT_LAST_POINT, {
+                    return Object.assign({}, DEFAULT_LAST_POINT, {
                         x,
                         y,
+                        pointXStart: this.lastPoint.pointXStart,
+                        pointYStart: this.lastPoint.pointYStart,
                         movementX: moveX,
                         movementY: moveY,
                         distanceX: x - this.startPointX,
@@ -301,9 +331,11 @@ export class GestureObserver {
                     const travelY = this.lastPoint.travelY === null
                         ? Math.abs(moveY)
                         : this.lastPoint.travelY + Math.abs(moveY);
-                    return Object.assign(DEFAULT_LAST_POINT, {
+                    return Object.assign({}, DEFAULT_LAST_POINT, {
                         x,
                         y,
+                        pointXStart: this.lastPoint.pointXStart,
+                        pointYStart: this.lastPoint.pointYStart,
                         movementX: moveX,
                         movementY: moveY,
                         distanceX: x - this.startPointX,

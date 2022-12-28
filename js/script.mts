@@ -62,7 +62,6 @@ const pointer = new GestureObserver((option, e, object) => {
     }
 });
 pointer.observe(main);
-console.log(pointer);
 
 function arrayBeutify(string: string) {
     return string
