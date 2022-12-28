@@ -6,7 +6,7 @@ const item = document.createElement('span');
 item.style.backgroundColor = 'gray';
 item.style.height = '0%';
 item.style.flex = '1';
-const LNG = 100;
+const LNG = 200;
 const list = new Array(LNG)
     .fill(null)
     .map((nu) => item.cloneNode());
