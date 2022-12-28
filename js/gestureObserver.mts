@@ -15,6 +15,9 @@ type PointType = {
     pinchLevel: number | null;
     pinchLength: number | null;
     startPinchLevel: number | null;
+    rotate: number | null;
+    rotateAbsolute: number | null;
+    startRotate: number | null;
 };
 interface OnGestureParameter {
     observeElement: HTMLElement;
@@ -108,6 +111,9 @@ export class GestureObserver {
         pinchLevel: null,
         pinchLength: null,
         startPinchLevel: null,
+        rotate: null,
+        rotateAbsolute: null,
+        startRotate: null,
     };
     protected primaryType: ObservePointerMode = null;
     protected onGeustreMode: OnGestureMode = null;
@@ -116,6 +122,7 @@ export class GestureObserver {
     protected startPointX = 0;
     protected startPointY = 0;
     protected startPinchLevel: number | null = null;
+    protected startRotate: number | null = null;
 
     protected thresholdMinX = this.startPointX - this.threshold;
     protected thresholdMaxX = this.startPointX + this.threshold;
@@ -304,6 +311,7 @@ export class GestureObserver {
                 this.startPointX = 0;
                 this.startPointY = 0;
                 this.startPinchLevel = null;
+                this.startRotate = null;
                 this.setThresholdValue();
                 this.onGeustreMode = null;
             }
@@ -404,6 +412,9 @@ export class GestureObserver {
                         pinchLevel: null,
                         pinchLength: null,
                         startPinchLevel: null,
+                        rotate: null,
+                        rotateAbsolute: null,
+                        startRotate: null,
                     };
                 }
                 case 'pinch-zoom': {
@@ -428,10 +439,21 @@ export class GestureObserver {
                     const pinchLength = Math.sqrt(
                         Math.pow(xDiff, 2) + Math.pow(yDiff, 2)
                     );
+                    const rotateAbsolute =
+                        (Math.atan2(
+                            points[0].y - points[1].y,
+                            points[0].x - points[1].x
+                        ) *
+                            180) /
+                        Math.PI;
                     if (this.startPinchLevel === null) {
                         this.startPinchLevel = pinchLength;
                     }
+                    if (this.startRotate === null) {
+                        this.startRotate = rotateAbsolute;
+                    }
                     const pinchLevel = pinchLength - this.startPinchLevel;
+                    const rotate = rotateAbsolute - this.startRotate;
                     const { x, y } = {
                         x: minX + xDiff / 2,
                         y: minY + yDiff / 2,
@@ -458,6 +480,9 @@ export class GestureObserver {
                         pinchLevel,
                         pinchLength,
                         startPinchLevel: this.startPinchLevel,
+                        rotate: rotate,
+                        rotateAbsolute,
+                        startRotate: this.startRotate,
                     };
                 }
             }
@@ -468,6 +493,9 @@ export class GestureObserver {
             pinchLevel: null,
             pinchLength: null,
             startPinchLevel: null,
+            rotate: null,
+            rotateAbsolute: null,
+            startRotate: null,
         };
     }
     protected setThresholdValue() {

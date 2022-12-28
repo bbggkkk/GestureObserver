@@ -30,6 +30,9 @@ export class GestureObserver {
         pinchLevel: null,
         pinchLength: null,
         startPinchLevel: null,
+        rotate: null,
+        rotateAbsolute: null,
+        startRotate: null,
     };
     primaryType = null;
     onGeustreMode = null;
@@ -37,6 +40,7 @@ export class GestureObserver {
     startPointX = 0;
     startPointY = 0;
     startPinchLevel = null;
+    startRotate = null;
     thresholdMinX = this.startPointX - this.threshold;
     thresholdMaxX = this.startPointX + this.threshold;
     thresholdMinY = this.startPointY - this.threshold;
@@ -166,6 +170,7 @@ export class GestureObserver {
                 this.startPointX = 0;
                 this.startPointY = 0;
                 this.startPinchLevel = null;
+                this.startRotate = null;
                 this.setThresholdValue();
                 this.onGeustreMode = null;
             }
@@ -209,6 +214,9 @@ export class GestureObserver {
                         pinchLevel: null,
                         pinchLength: null,
                         startPinchLevel: null,
+                        rotate: null,
+                        rotateAbsolute: null,
+                        startRotate: null,
                     };
                 }
                 case 'pinch-zoom': {
@@ -225,10 +233,17 @@ export class GestureObserver {
                     const xDiff = maxX - minX;
                     const yDiff = maxY - minY;
                     const pinchLength = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff, 2));
+                    const rotateAbsolute = (Math.atan2(points[0].y - points[1].y, points[0].x - points[1].x) *
+                        180) /
+                        Math.PI;
                     if (this.startPinchLevel === null) {
                         this.startPinchLevel = pinchLength;
                     }
+                    if (this.startRotate === null) {
+                        this.startRotate = rotateAbsolute;
+                    }
                     const pinchLevel = pinchLength - this.startPinchLevel;
+                    const rotate = rotateAbsolute - this.startRotate;
                     const { x, y } = {
                         x: minX + xDiff / 2,
                         y: minY + yDiff / 2,
@@ -248,6 +263,9 @@ export class GestureObserver {
                         pinchLevel,
                         pinchLength,
                         startPinchLevel: this.startPinchLevel,
+                        rotate: rotate,
+                        rotateAbsolute,
+                        startRotate: this.startRotate,
                     };
                 }
             }
@@ -258,6 +276,9 @@ export class GestureObserver {
             pinchLevel: null,
             pinchLength: null,
             startPinchLevel: null,
+            rotate: null,
+            rotateAbsolute: null,
+            startRotate: null,
         };
     }
     setThresholdValue() {

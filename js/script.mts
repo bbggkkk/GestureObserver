@@ -39,10 +39,9 @@ const pointer = new GestureObserver((option, e, object) => {
             acc.push(text);
             return acc;
         }, [])
-        .join('\n')}\npoint : ${jsonBeutify(JSON.stringify(point)).replace(
-        '    ',
-        ''
-    )}\npointer : ${jsonBeutify(JSON.stringify(pointer))}`;
+        .join('\n')}\npoint : ${jsonBeutify(
+        arrayBeutify(JSON.stringify(point))
+    )}\npointer : ${arrayBeutify(JSON.stringify(pointer))}`;
     info.innerHTML = text;
 
     diffList.push(point.pinchLevel);
@@ -65,7 +64,7 @@ const pointer = new GestureObserver((option, e, object) => {
 pointer.observe(main);
 console.log(pointer);
 
-function jsonBeutify(string: string) {
+function arrayBeutify(string: string) {
     return string
         .replace('[', '[\n')
         .replace(']', '\n]')
@@ -75,4 +74,28 @@ function jsonBeutify(string: string) {
         .replace(/\{/g, '    {')
         .replace(/([{,}])(.*?):/g, '$1<span style="color:brown;">$2</span>:')
         .replace(/:([^:]*?)([},])/g, ':<span style="color:teal;">$1</span>$2');
+}
+
+function jsonBeutify(string: string) {
+    let space = '';
+    return string.replace(/[{,}:]/g, function (match) {
+        let rt = '';
+        switch (match) {
+            case '{':
+                space += '    ';
+                rt = match + '\n' + space;
+                break;
+            case ',':
+                rt = match + '\n' + space;
+                break;
+            case '}':
+                space = space.substr(0, space.length - 4);
+                rt = '\n' + space + match;
+                break;
+            case ':':
+                rt = ' ' + match + ' ';
+                break;
+        }
+        return rt;
+    });
 }
