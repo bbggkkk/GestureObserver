@@ -50,11 +50,11 @@ const pointer = new GestureObserver((option, e, object) => {
     }
 
     if (other.gesture === 'pinch-zoom') {
-        console.log(point.startPinchLevel);
+        console.log(point.pinchLevelStart);
         // console.log(diffList.map((item) => item));
         diffList.forEach((item, idx, arr) => {
             const level =
-                (((item + point.startPinchLevel) / point.startPinchLevel) *
+                (((item + point.pinchLevelStart) / point.pinchLevelStart) *
                     50) /
                 1.5;
             list[idx].style.height = `${level}%`;
