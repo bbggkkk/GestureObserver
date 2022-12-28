@@ -108,7 +108,6 @@ export class GestureObserver {
         const path = e.composedPath();
         requestAnimationFrame(() => {
             const { pointerId, pointerType, observeElement, target, clientX, clientY, } = this.pointerHandler(e, path);
-            console.log(e);
             if (this.observePointer.has(pointerType) &&
                 this.isTab === true &&
                 this.primaryType === e.pointerType) {

@@ -232,7 +232,6 @@ export class GestureObserver {
                 clientX,
                 clientY,
             } = this.pointerHandler(e, path);
-            console.log(e);
             if (
                 this.observePointer.has(pointerType) &&
                 this.isTab === true &&
