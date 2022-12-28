@@ -16,8 +16,8 @@ const main = document.querySelector('main')!;
 const info = document.querySelector('pre')! as HTMLElement;
 
 const pointer = new GestureObserver(
-    ({ gesture, pointer, isEnd }, e, object) => {
-        const text = `gesture : <span style="color:teal; font-weight:bold;">${gesture}</span>\nisEnd   : <span style="color:darkorange; font-weight:bold;">${isEnd}</span>\npointer : ${jsonBeutify(
+    ({ gesture, pointer, isEnd, isTab }, e, object) => {
+        const text = `gesture : <span style="color:teal; font-weight:bold;">${gesture}</span>\nisEnd   : <span style="color:darkorange; font-weight:bold;">${isEnd}</span>\nisTab : <span style="color:darkorange; font-weight:bold;">${isTab}</span>\npointer : ${jsonBeutify(
             JSON.stringify(pointer)
         )}`;
         info.innerHTML = text;
@@ -34,6 +34,6 @@ function jsonBeutify(string: string) {
             return '},\n{';
         })
         .replace(/\{/g, '    {')
-        .replace(/"([x|y])"/g, '<span style="color:brown;">"$1"</span>')
-        .replace(/(\d+)/g, '<span style="color:teal;">$1</span>');
+        .replace(/([{,}])(.*?):/g, '$1<span style="color:brown;">$2</span>:')
+        .replace(/:([^:]*?)([},])/g, ':<span style="color:teal;">$1</span>$2');
 }

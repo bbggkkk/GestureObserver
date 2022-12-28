@@ -1,3 +1,13 @@
+function findSet(set, callback) {
+    const arr = [...set];
+    const lng = arr.length;
+    for (let i = 0; i < lng; i++) {
+        if (callback(arr[i], i, set)) {
+            return arr[i];
+        }
+    }
+    return null;
+}
 export class GestureObserver {
     onGesture;
     observeGesture = new Set([
@@ -13,6 +23,8 @@ export class GestureObserver {
     observeElements = new Set();
     inited = false;
     isTab = false;
+    isEnd = true;
+    primaryType = null;
     onGeustreMode = null;
     startPointX = 0;
     startPointY = 0;
@@ -24,10 +36,9 @@ export class GestureObserver {
     pointerHandler = (e, path) => {
         const { pointerId, pointerType, target, offsetX, offsetY } = e;
         const observeElement = path.find((item) => this.observeElements.has(item));
-        this.pointerList.set(pointerId, e);
         return {
             pointerId,
-            pointerType,
+            pointerType: pointerType,
             observeElement,
             target,
             offsetX,
@@ -38,25 +49,29 @@ export class GestureObserver {
         const path = e.composedPath();
         requestAnimationFrame(() => {
             const { pointerId, pointerType, observeElement, target, offsetX, offsetY, } = this.pointerHandler(e, path);
-            if (observeElement === undefined)
-                return;
-            this.isTab = true;
-            const { x, y } = this.findActualPoint(observeElement, target, offsetX, offsetY);
-            this.pointerInfoList.set(pointerId, { x, y });
-            this.startPointX = x;
-            this.startPointY = y;
-            this.setThresholdValue();
+            if (observeElement !== undefined) {
+                if (e.isPrimary === true) {
+                    this.primaryType = pointerType;
+                }
+                this.isTab = true;
+                this.isEnd = false;
+                this.pointerList.set(pointerId, e);
+                const { x, y } = this.findActualPoint(observeElement, target, offsetX, offsetY);
+                this.pointerInfoList.set(pointerId, { pointerType, x, y });
+                this.startPointX = x;
+                this.startPointY = y;
+                this.setThresholdValue();
+            }
         });
     };
     pointerMoveHandler = (e) => {
         const path = e.composedPath();
         requestAnimationFrame(() => {
             const { pointerId, pointerType, observeElement, target, offsetX, offsetY, } = this.pointerHandler(e, path);
-            if (observeElement === undefined)
-                return;
-            if (this.isTab) {
+            if (this.isTab === true) {
+                this.pointerList.set(pointerId, e);
                 const { x, y } = this.findActualPoint(observeElement, target, offsetX, offsetY);
-                this.pointerInfoList.set(pointerId, { x, y });
+                this.pointerInfoList.set(pointerId, { pointerType, x, y });
                 if ((this.onGeustreMode === null ||
                     this.onGeustreMode === 'pan-x') &&
                     (this.thresholdMinX > x || this.thresholdMaxX < x) &&
@@ -79,8 +94,9 @@ export class GestureObserver {
                         gesture: this.onGeustreMode,
                         observeElement,
                         isTab: this.isTab,
-                        isEnd: false,
+                        isEnd: this.isEnd,
                         pointer: [...this.pointerInfoList.values()],
+                        primaryType: this.primaryType,
                     }, e, this);
                 }
             }
@@ -90,8 +106,6 @@ export class GestureObserver {
         const path = e.composedPath();
         requestAnimationFrame(() => {
             const { pointerId, pointerType, observeElement, target, offsetX, offsetY, } = this.pointerHandler(e, path);
-            if (observeElement === undefined)
-                return;
             this.pointerList.delete(pointerId);
             this.pointerInfoList.delete(pointerId);
             if ((this.onGeustreMode !== 'pinch-zoom' &&
@@ -99,15 +113,18 @@ export class GestureObserver {
                 (this.onGeustreMode === 'pinch-zoom' &&
                     this.pointerList.size < 2)) {
                 this.isTab = false;
+                this.isEnd = true;
                 if (this.onGeustreMode !== null) {
                     this.onGesture({
                         gesture: this.onGeustreMode,
                         observeElement,
                         isTab: this.isTab,
-                        isEnd: true,
+                        isEnd: this.isEnd,
                         pointer: [...this.pointerInfoList.values()],
+                        primaryType: this.primaryType,
                     }, e, this);
                 }
+                this.primaryType = null;
                 this.startPointX = 0;
                 this.startPointY = 0;
                 this.setThresholdValue();
@@ -161,9 +178,6 @@ export class GestureObserver {
             passive: false,
         });
         globalThis.addEventListener('pointerup', this.pointerUpHandler, {
-            passive: false,
-        });
-        globalThis.addEventListener('wheel', this.wheelHandler, {
             passive: false,
         });
         this.inited = true;

@@ -23,6 +23,12 @@ div {
 }
 
 main {
+  overflow: hidden;
+  border-radius: 3vmin;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
   touch-action: none;
   width: 50%;
   height: 50%;

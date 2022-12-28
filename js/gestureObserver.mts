@@ -7,7 +7,8 @@
  * */
 type OnGestureMode = 'pan-x' | 'pan-y' | 'pinch-zoom' | 'double-tab' | null;
 type ObserveGestureType = Exclude<OnGestureMode, null>;
-type ObservePointerType = 'mouse' | 'touch' | 'pen';
+type ObservePointerMode = 'mouse' | 'touch' | 'pen' | null;
+type ObservePointerType = Exclude<ObservePointerMode, null>;
 interface OnGestureParameter {
     observeElement: HTMLElement;
     isTab: boolean;
@@ -16,7 +17,9 @@ interface OnGestureParameter {
     pointer: {
         x: number;
         y: number;
+        pointerType: ObservePointerType;
     }[];
+    primaryType: ObservePointerMode;
 }
 type OnGestureType = (
     { observeElement }: OnGestureParameter,
@@ -50,19 +53,19 @@ export interface GestureObserverOptionType {
 //     }
 //     return recentValue;
 // }
-// function findSet(
-//     set: Set<any>,
-//     callback: (item: any, idx: number, set: Set<any>) => any
-// ) {
-//     const arr = [...set];
-//     const lng = arr.length;
-//     for (let i = 0; i < lng; i++) {
-//         if (callback(arr[i], i, set)) {
-//             return arr[i];
-//         }
-//     }
-//     return null;
-// }
+function findSet(
+    set: Set<any>,
+    callback: (item: any, idx: number, set: Set<any>) => any
+) {
+    const arr = [...set];
+    const lng = arr.length;
+    for (let i = 0; i < lng; i++) {
+        if (callback(arr[i], i, set)) {
+            return arr[i];
+        }
+    }
+    return null;
+}
 export class GestureObserver {
     protected onGesture: OnGestureType;
     protected observeGesture = new Set([
@@ -74,12 +77,16 @@ export class GestureObserver {
     protected observePointer = new Set(['mouse', 'touch', 'pen']);
     protected threshold = 4 * devicePixelRatio;
     protected pointerList: Map<number, PointerEvent> = new Map();
-    protected pointerInfoList: Map<number, { x: number; y: number }> =
-        new Map();
+    protected pointerInfoList: Map<
+        number,
+        { x: number; y: number; pointerType: ObservePointerType }
+    > = new Map();
     protected observeElements: Set<HTMLElement> = new Set();
     protected inited = false;
 
     protected isTab = false;
+    protected isEnd = true;
+    protected primaryType: ObservePointerMode = null;
     protected onGeustreMode: OnGestureMode = null;
     protected startPointX = 0;
     protected startPointY = 0;
@@ -96,10 +103,9 @@ export class GestureObserver {
         const observeElement = path.find((item) =>
             this.observeElements.has(item as HTMLElement)
         ) as HTMLElement;
-        this.pointerList.set(pointerId, e);
         return {
             pointerId,
-            pointerType,
+            pointerType: pointerType as ObservePointerType,
             observeElement,
             target,
             offsetX,
@@ -117,19 +123,25 @@ export class GestureObserver {
                 offsetX,
                 offsetY,
             } = this.pointerHandler(e, path);
-            if (observeElement === undefined) return;
-            this.isTab = true;
-            const { x, y } = this.findActualPoint(
-                observeElement,
-                target as HTMLElement,
-                offsetX,
-                offsetY
-            );
-            this.pointerInfoList.set(pointerId, { x, y });
+            if (observeElement !== undefined) {
+                if (e.isPrimary === true) {
+                    this.primaryType = pointerType;
+                }
+                this.isTab = true;
+                this.isEnd = false;
+                this.pointerList.set(pointerId, e);
+                const { x, y } = this.findActualPoint(
+                    observeElement,
+                    target as HTMLElement,
+                    offsetX,
+                    offsetY
+                );
+                this.pointerInfoList.set(pointerId, { pointerType, x, y });
 
-            this.startPointX = x;
-            this.startPointY = y;
-            this.setThresholdValue();
+                this.startPointX = x;
+                this.startPointY = y;
+                this.setThresholdValue();
+            }
         });
     };
     protected pointerMoveHandler = (e: PointerEvent) => {
@@ -143,15 +155,15 @@ export class GestureObserver {
                 offsetX,
                 offsetY,
             } = this.pointerHandler(e, path);
-            if (observeElement === undefined) return;
-            if (this.isTab) {
+            if (this.isTab === true) {
+                this.pointerList.set(pointerId, e);
                 const { x, y } = this.findActualPoint(
                     observeElement,
                     target as HTMLElement,
                     offsetX,
                     offsetY
                 );
-                this.pointerInfoList.set(pointerId, { x, y });
+                this.pointerInfoList.set(pointerId, { pointerType, x, y });
                 if (
                     (this.onGeustreMode === null ||
                         this.onGeustreMode === 'pan-x') &&
@@ -182,8 +194,9 @@ export class GestureObserver {
                             gesture: this.onGeustreMode,
                             observeElement,
                             isTab: this.isTab,
-                            isEnd: false,
+                            isEnd: this.isEnd,
                             pointer: [...this.pointerInfoList.values()],
+                            primaryType: this.primaryType,
                         },
                         e,
                         this
@@ -203,7 +216,7 @@ export class GestureObserver {
                 offsetX,
                 offsetY,
             } = this.pointerHandler(e, path);
-            if (observeElement === undefined) return;
+            // if (observeElement === undefined) return;
             this.pointerList.delete(pointerId);
             this.pointerInfoList.delete(pointerId);
 
@@ -214,6 +227,7 @@ export class GestureObserver {
                     this.pointerList.size < 2)
             ) {
                 this.isTab = false;
+                this.isEnd = true;
 
                 if (this.onGeustreMode !== null) {
                     this.onGesture(
@@ -221,14 +235,16 @@ export class GestureObserver {
                             gesture: this.onGeustreMode,
                             observeElement,
                             isTab: this.isTab,
-                            isEnd: true,
+                            isEnd: this.isEnd,
                             pointer: [...this.pointerInfoList.values()],
+                            primaryType: this.primaryType,
                         },
                         e,
                         this
                     );
                 }
 
+                this.primaryType = null;
                 this.startPointX = 0;
                 this.startPointY = 0;
                 this.setThresholdValue();
@@ -302,9 +318,9 @@ export class GestureObserver {
         globalThis.addEventListener('pointerup', this.pointerUpHandler, {
             passive: false,
         });
-        globalThis.addEventListener('wheel', this.wheelHandler, {
-            passive: false,
-        });
+        // globalThis.addEventListener('wheel', this.wheelHandler, {
+        //     passive: false,
+        // });
         this.inited = true;
     }
     observe(element: HTMLElement) {

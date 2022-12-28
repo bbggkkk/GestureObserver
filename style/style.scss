@@ -16,6 +16,9 @@ div {
 }
 
 main {
+    overflow: hidden;
+    border-radius:3vmin;
+    user-select:none;
     touch-action:none;
     width:50%; height:50%;
     position:absolute;
