@@ -3,14 +3,15 @@ const wrap = document.getElementById('wrap');
 const box = document.getElementById('box');
 const gestureObserver = new GestureObserver((option) => {
     const { gesture, point, isEnd, startTarget } = option;
-    switch (gesture) {
-        case 'drag':
-            if (startTarget === box)
+    if (startTarget === box) {
+        switch (gesture) {
+            case 'drag':
                 dragHandler(option);
-            break;
-        case 'pinch-zoom':
-            pinchZoomHandler(option);
-            break;
+                break;
+            case 'pinch-zoom':
+                pinchZoomHandler(option);
+                break;
+        }
     }
 }, {
     observeGesture: ['drag', 'pinch-zoom'],
@@ -30,7 +31,16 @@ function dragHandler(option) {
         box.setAttribute('data-y', my);
     }
     else {
-        box.style.transform = `translate(${mx}px, ${my}px)`;
+        box.style.transform = `translate(${mx}px, ${my}px) scale(${box.getAttribute('data-scale') || 1})`;
     }
 }
-function pinchZoomHandler(option) { }
+function pinchZoomHandler(option) {
+    const { point, isEnd } = option;
+    const { pinchMovement } = point;
+    if (pinchMovement === null)
+        return;
+    const scale = Math.max(1, (Number(box.getAttribute('data-scale')) || 1) + pinchMovement / 120);
+    console.log(scale);
+    box.setAttribute('data-scale', scale.toFixed(3));
+    dragHandler(option);
+}

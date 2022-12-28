@@ -29,6 +29,7 @@ const DEFAULT_LAST_POINT = {
     pinchLevel: null,
     pinchLength: null,
     pinchLevelStart: null,
+    pinchMovement: null,
     rotate: null,
     rotateAbsolute: null,
     rotateStart: null,
@@ -130,12 +131,6 @@ export class GestureObserver {
                             this.onGeustreMode === 'drag')) {
                         this.onGeustreMode = 'drag';
                     }
-                    if (this.lastPoint.pointXStart === null) {
-                        this.lastPoint = Object.assign({}, this.lastPoint, {
-                            pointXStart: x,
-                            pointYStart: y,
-                        });
-                    }
                 }
                 if ((this.thresholdMinY > y || this.thresholdMaxY < y) &&
                     this.pointerList.size === 1) {
@@ -149,24 +144,12 @@ export class GestureObserver {
                             this.onGeustreMode === 'drag')) {
                         this.onGeustreMode = 'drag';
                     }
-                    if (this.lastPoint.pointXStart === null) {
-                        this.lastPoint = Object.assign({}, this.lastPoint, {
-                            pointXStart: x,
-                            pointYStart: y,
-                        });
-                    }
                 }
                 if (this.observeGesture.has('pinch-zoom') &&
                     (this.onGeustreMode === null ||
                         this.onGeustreMode === 'pinch-zoom') &&
                     this.pointerList.size > 1) {
                     this.onGeustreMode = 'pinch-zoom';
-                    if (this.lastPoint.pointXStart === null) {
-                        this.lastPoint = Object.assign({}, this.lastPoint, {
-                            pointXStart: x,
-                            pointYStart: y,
-                        });
-                    }
                 }
                 if (this.onGeustreMode !== null) {
                     this.lastPoint = this.getPoint(observeElement);
@@ -259,6 +242,12 @@ export class GestureObserver {
                 case 'pan-x':
                 case 'pan-y': {
                     const { x, y } = [...pointerInfoList.values()][0];
+                    if (this.lastPoint.pointXStart === null) {
+                        this.lastPoint = Object.assign({}, this.lastPoint, {
+                            pointXStart: x,
+                            pointYStart: y,
+                        });
+                    }
                     const { tiltX, tiltY, altKey, ctrlKey, metaKey, shiftKey } = [...pointerList.values()][0];
                     const moveX = this.lastPoint.x === null ? 0 : x - this.lastPoint.x;
                     const moveY = this.lastPoint.y === null ? 0 : y - this.lastPoint.y;
@@ -319,15 +308,12 @@ export class GestureObserver {
                         x: minX + xDiff / 2,
                         y: minY + yDiff / 2,
                     };
-                    const span = document.querySelector('#touch');
-                    const spanA = document.querySelector('.touchA');
-                    const spanB = document.querySelector('.touchB');
-                    span.style.left = `${x}px`;
-                    span.style.top = `${y}px`;
-                    spanA.style.left = `${points[0].x}px`;
-                    spanA.style.top = `${points[0].y}px`;
-                    spanB.style.left = `${points[1].x}px`;
-                    spanB.style.top = `${points[1].y}px`;
+                    if (this.lastPoint.pointXStart === null) {
+                        this.lastPoint = Object.assign({}, this.lastPoint, {
+                            pointXStart: x,
+                            pointYStart: y,
+                        });
+                    }
                     const moveX = this.lastPoint.x === null ? 0 : x - this.lastPoint.x;
                     const moveY = this.lastPoint.y === null ? 0 : y - this.lastPoint.y;
                     const travelX = this.lastPoint.travelX === null
@@ -356,6 +342,7 @@ export class GestureObserver {
                         pinchLevel,
                         pinchLength,
                         pinchLevelStart: this.pinchLevelStart,
+                        pinchMovement: pinchLevel - (this.lastPoint.pinchLevel || 0),
                         rotate: rotate,
                         rotateAbsolute,
                         rotateStart: this.rotateStart,

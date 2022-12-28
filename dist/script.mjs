@@ -6,7 +6,7 @@ const item = document.createElement('span');
 item.style.backgroundColor = 'gray';
 item.style.height = '0%';
 item.style.flex = '1';
-const LNG = 200;
+const LNG = 100;
 const list = new Array(LNG)
     .fill(null)
     .map((nu) => item.cloneNode());
@@ -14,8 +14,13 @@ list.forEach((item) => {
     grp.appendChild(item);
 });
 const diffList = [];
+const span = document.querySelector('#touch');
+const spanA = document.querySelector('.touchA');
+const spanB = document.querySelector('.touchB');
 const pointer = new GestureObserver((option, e, object) => {
     const { point, pointer, ...other } = option;
+    const { x, y } = point;
+    const points = pointer;
     const text = `${Object.keys(other)
         .reduce((acc, item) => {
         const text = `${item} : <span style="color:${typeof other[item] === 'boolean' ? 'darkorange' : 'teal'}; font-weight:bold;">${other[item]}</span>`;
@@ -24,6 +29,16 @@ const pointer = new GestureObserver((option, e, object) => {
     }, [])
         .join('\n')}\npoint : ${jsonBeutify(arrayBeutify(JSON.stringify(point)))}\npointer : ${arrayBeutify(JSON.stringify(pointer))}`;
     info.innerHTML = text;
+    span.style.left = `${x}px`;
+    span.style.top = `${y}px`;
+    if (points[0] !== undefined) {
+        spanA.style.left = `${points[0].x}px`;
+        spanA.style.top = `${points[0].y}px`;
+    }
+    if (points[1] !== undefined) {
+        spanB.style.left = `${points[1].x}px`;
+        spanB.style.top = `${points[1].y}px`;
+    }
     diffList.push(point.pinchLevel);
     if (diffList.length > LNG) {
         diffList.shift();
