@@ -90,7 +90,12 @@ export class GestureObserver {
     protected pointerList: Map<number, PointerEvent> = new Map();
     protected pointerInfoList: Map<
         number,
-        { x: number; y: number; pointerType: ObservePointerType }
+        {
+            x: number;
+            y: number;
+            pointerType: ObservePointerType;
+            observeElement: HTMLElement;
+        }
     > = new Map();
     protected observeElements: Set<HTMLElement> = new Set();
     protected inited = false;
@@ -156,13 +161,18 @@ export class GestureObserver {
                 this.isEnd = false;
                 this.pointerList.set(pointerId, e);
                 const { x, y } = this.findActualPoint(
+                    pointerId,
                     observeElement,
                     target as HTMLElement,
                     offsetX,
                     offsetY
                 );
-                this.pointerInfoList.set(pointerId, { pointerType, x, y });
-
+                this.pointerInfoList.set(pointerId, {
+                    pointerType,
+                    x,
+                    y,
+                    observeElement,
+                });
                 this.startPointX = x;
                 this.startPointY = y;
                 this.setThresholdValue();
@@ -183,12 +193,19 @@ export class GestureObserver {
             if (this.isTab === true && this.primaryType === e.pointerType) {
                 this.pointerList.set(pointerId, e);
                 const { x, y } = this.findActualPoint(
+                    pointerId,
                     observeElement,
                     target as HTMLElement,
                     offsetX,
                     offsetY
                 );
-                this.pointerInfoList.set(pointerId, { pointerType, x, y });
+                this.pointerInfoList.set(pointerId, {
+                    pointerType,
+                    x,
+                    y,
+                    observeElement:
+                        this.pointerInfoList.get(pointerId)!.observeElement,
+                });
                 if (
                     (this.onGeustreMode === null ||
                         this.onGeustreMode === 'pan-x') &&
@@ -306,6 +323,7 @@ export class GestureObserver {
         });
     };
     protected findActualPoint(
+        pointerId: number,
         observeElement: HTMLElement,
         target: HTMLElement,
         offsetX: number,
@@ -313,17 +331,39 @@ export class GestureObserver {
     ) {
         let nowElement = target;
         let value = { x: offsetX, y: offsetY };
-        while (nowElement !== observeElement) {
-            if (
-                !nowElement.parentElement ||
-                nowElement.parentElement === document.body
-            ) {
-                value = { x: offsetX, y: offsetY };
-                break;
+        if (observeElement !== undefined) {
+            while (nowElement !== observeElement) {
+                if (
+                    !nowElement.parentElement ||
+                    nowElement.parentElement === document.body
+                ) {
+                    break;
+                }
+                value.x += nowElement.offsetLeft;
+                value.y += nowElement.offsetTop;
+                nowElement = nowElement.parentElement;
             }
-            value.x += nowElement.offsetLeft;
-            value.y += nowElement.offsetTop;
-            nowElement = nowElement.parentElement;
+        } else {
+            const targetElement =
+                this.pointerInfoList.get(pointerId)?.observeElement;
+            if (targetElement !== undefined) {
+                nowElement = targetElement;
+                let lastElement = targetElement;
+                do {
+                    if (!nowElement.parentElement) {
+                        break;
+                    }
+                    nowElement = nowElement.parentElement;
+                    const { x: lx, y: ly } =
+                        lastElement.getBoundingClientRect();
+                    const { x: nx, y: ny } = nowElement.getBoundingClientRect();
+                    value.x -= lx - nx;
+                    value.y -= ly - ny;
+                    lastElement = nowElement;
+                } while (nowElement !== target);
+
+                // console.log(value);
+            }
         }
         return value;
     }
@@ -356,6 +396,7 @@ export class GestureObserver {
                     ];
                     const points = touchs.map((item) =>
                         this.findActualPoint(
+                            item.pointerId,
                             observeElement,
                             item.target,
                             item.offsetX,

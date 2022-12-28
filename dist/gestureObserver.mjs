@@ -67,8 +67,13 @@ export class GestureObserver {
                 this.isTab = true;
                 this.isEnd = false;
                 this.pointerList.set(pointerId, e);
-                const { x, y } = this.findActualPoint(observeElement, target, offsetX, offsetY);
-                this.pointerInfoList.set(pointerId, { pointerType, x, y });
+                const { x, y } = this.findActualPoint(pointerId, observeElement, target, offsetX, offsetY);
+                this.pointerInfoList.set(pointerId, {
+                    pointerType,
+                    x,
+                    y,
+                    observeElement,
+                });
                 this.startPointX = x;
                 this.startPointY = y;
                 this.setThresholdValue();
@@ -81,8 +86,13 @@ export class GestureObserver {
             const { pointerId, pointerType, observeElement, target, offsetX, offsetY, } = this.pointerHandler(e, path);
             if (this.isTab === true && this.primaryType === e.pointerType) {
                 this.pointerList.set(pointerId, e);
-                const { x, y } = this.findActualPoint(observeElement, target, offsetX, offsetY);
-                this.pointerInfoList.set(pointerId, { pointerType, x, y });
+                const { x, y } = this.findActualPoint(pointerId, observeElement, target, offsetX, offsetY);
+                this.pointerInfoList.set(pointerId, {
+                    pointerType,
+                    x,
+                    y,
+                    observeElement: this.pointerInfoList.get(pointerId).observeElement,
+                });
                 if ((this.onGeustreMode === null ||
                     this.onGeustreMode === 'pan-x') &&
                     (this.thresholdMinX > x || this.thresholdMaxX < x) &&
@@ -163,18 +173,37 @@ export class GestureObserver {
                 return;
         });
     };
-    findActualPoint(observeElement, target, offsetX, offsetY) {
+    findActualPoint(pointerId, observeElement, target, offsetX, offsetY) {
         let nowElement = target;
         let value = { x: offsetX, y: offsetY };
-        while (nowElement !== observeElement) {
-            if (!nowElement.parentElement ||
-                nowElement.parentElement === document.body) {
-                value = { x: offsetX, y: offsetY };
-                break;
+        if (observeElement !== undefined) {
+            while (nowElement !== observeElement) {
+                if (!nowElement.parentElement ||
+                    nowElement.parentElement === document.body) {
+                    break;
+                }
+                value.x += nowElement.offsetLeft;
+                value.y += nowElement.offsetTop;
+                nowElement = nowElement.parentElement;
             }
-            value.x += nowElement.offsetLeft;
-            value.y += nowElement.offsetTop;
-            nowElement = nowElement.parentElement;
+        }
+        else {
+            const targetElement = this.pointerInfoList.get(pointerId)?.observeElement;
+            if (targetElement !== undefined) {
+                nowElement = targetElement;
+                let lastElement = targetElement;
+                do {
+                    if (!nowElement.parentElement) {
+                        break;
+                    }
+                    nowElement = nowElement.parentElement;
+                    const { x: lx, y: ly } = lastElement.getBoundingClientRect();
+                    const { x: nx, y: ny } = nowElement.getBoundingClientRect();
+                    value.x -= lx - nx;
+                    value.y -= ly - ny;
+                    lastElement = nowElement;
+                } while (nowElement !== target);
+            }
         }
         return value;
     }
@@ -203,7 +232,7 @@ export class GestureObserver {
                         iterator.next().value,
                         iterator.next().value,
                     ];
-                    const points = touchs.map((item) => this.findActualPoint(observeElement, item.target, item.offsetX, item.offsetY));
+                    const points = touchs.map((item) => this.findActualPoint(item.pointerId, observeElement, item.target, item.offsetX, item.offsetY));
                     const minX = Math.min(points[0].x, points[1].x);
                     const maxX = Math.max(points[0].x, points[1].x);
                     const minY = Math.min(points[0].y, points[1].y);
