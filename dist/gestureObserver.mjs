@@ -174,8 +174,11 @@ export class GestureObserver {
                     break;
                 case 'pinch-zoom':
                     const iterator = pointerList.values();
-                    const touchA = iterator.next().value;
-                    const touchB = iterator.next().value;
+                    const touchs = [
+                        iterator.next().value,
+                        iterator.next().value,
+                    ];
+                    console.log(touchs);
                     break;
             }
         }
