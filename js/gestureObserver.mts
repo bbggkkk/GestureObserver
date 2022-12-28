@@ -55,6 +55,7 @@ export interface OnGestureParameter {
         pointerType: ObservePointerType;
     }[];
     primaryType: ObservePointerMode;
+    startTarget: EventTarget | null;
 }
 export type OnGestureType = (
     { observeElement }: OnGestureParameter,
@@ -154,6 +155,7 @@ export class GestureObserver {
 
     protected startPointX = 0;
     protected startPointY = 0;
+    protected startTarget: EventTarget | null = null;
     protected pinchLevelStart: number | null = null;
     protected rotateStart: number | null = null;
 
@@ -191,8 +193,14 @@ export class GestureObserver {
     protected pointerDownHandler = (e: PointerEvent) => {
         const path = e.composedPath();
         requestAnimationFrame(() => {
-            const { pointerId, pointerType, observeElement, clientX, clientY } =
-                this.pointerHandler(e, path);
+            const {
+                pointerId,
+                pointerType,
+                observeElement,
+                clientX,
+                clientY,
+                target,
+            } = this.pointerHandler(e, path);
             if (
                 this.observePointer.has(pointerType) &&
                 observeElement !== undefined &&
@@ -219,6 +227,7 @@ export class GestureObserver {
                 });
                 this.startPointX = x;
                 this.startPointY = y;
+                this.startTarget = target;
                 this.lastPoint.travelX = null;
                 this.lastPoint.travelY = null;
                 this.lastPoint.travel = null;
@@ -331,6 +340,7 @@ export class GestureObserver {
                             pointer: [...this.pointerInfoList.values()],
                             observeElement,
                             target,
+                            startTarget: this.startTarget,
                             path,
                         },
                         e,
@@ -372,6 +382,7 @@ export class GestureObserver {
                             pointer: [...this.pointerInfoList.values()],
                             observeElement,
                             target,
+                            startTarget: this.startTarget,
                             path,
                         },
                         e,
@@ -382,6 +393,7 @@ export class GestureObserver {
                 this.primaryType = null;
                 this.startPointX = 0;
                 this.startPointY = 0;
+                this.startTarget = null;
                 this.pinchLevelStart = null;
                 this.rotateStart = null;
                 this.lastPoint = DEFAULT_LAST_POINT;

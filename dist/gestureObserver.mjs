@@ -50,6 +50,7 @@ export class GestureObserver {
     pinchLevel = null;
     startPointX = 0;
     startPointY = 0;
+    startTarget = null;
     pinchLevelStart = null;
     rotateStart = null;
     thresholdMinX = this.startPointX - this.threshold;
@@ -74,7 +75,7 @@ export class GestureObserver {
     pointerDownHandler = (e) => {
         const path = e.composedPath();
         requestAnimationFrame(() => {
-            const { pointerId, pointerType, observeElement, clientX, clientY } = this.pointerHandler(e, path);
+            const { pointerId, pointerType, observeElement, clientX, clientY, target, } = this.pointerHandler(e, path);
             if (this.observePointer.has(pointerType) &&
                 observeElement !== undefined &&
                 (this.primaryType === e.pointerType ||
@@ -94,6 +95,7 @@ export class GestureObserver {
                 });
                 this.startPointX = x;
                 this.startPointY = y;
+                this.startTarget = target;
                 this.lastPoint.travelX = null;
                 this.lastPoint.travelY = null;
                 this.lastPoint.travel = null;
@@ -178,6 +180,7 @@ export class GestureObserver {
                         pointer: [...this.pointerInfoList.values()],
                         observeElement,
                         target,
+                        startTarget: this.startTarget,
                         path,
                     }, e, this);
                 }
@@ -207,12 +210,14 @@ export class GestureObserver {
                         pointer: [...this.pointerInfoList.values()],
                         observeElement,
                         target,
+                        startTarget: this.startTarget,
                         path,
                     }, e, this);
                 }
                 this.primaryType = null;
                 this.startPointX = 0;
                 this.startPointY = 0;
+                this.startTarget = null;
                 this.pinchLevelStart = null;
                 this.rotateStart = null;
                 this.lastPoint = DEFAULT_LAST_POINT;

@@ -2,10 +2,11 @@ import { GestureObserver } from './gestureObserver.mjs';
 const wrap = document.getElementById('wrap');
 const box = document.getElementById('box');
 const gestureObserver = new GestureObserver((option) => {
-    const { gesture, point, isEnd } = option;
+    const { gesture, point, isEnd, startTarget } = option;
     switch (gesture) {
         case 'drag':
-            dragHandler(option);
+            if (startTarget === box)
+                dragHandler(option);
             break;
         case 'pinch-zoom':
             pinchZoomHandler(option);
@@ -18,7 +19,6 @@ gestureObserver.observe(wrap);
 function dragHandler(option) {
     const { point, isEnd } = option;
     const { x, y, pointXStart, pointYStart } = point;
-    console.log(pointXStart);
     const mx = ((x || 0) -
         (pointXStart || 0) +
         (Number(box.getAttribute('data-x')) || 0)).toFixed(3);
