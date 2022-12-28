@@ -93,6 +93,7 @@ export class GestureObserver {
                     this.onGesture({
                         gesture: this.onGeustreMode,
                         observeElement,
+                        path,
                         isTab: this.isTab,
                         isEnd: this.isEnd,
                         pointer: [...this.pointerInfoList.values()],
@@ -118,6 +119,7 @@ export class GestureObserver {
                     this.onGesture({
                         gesture: this.onGeustreMode,
                         observeElement,
+                        path,
                         isTab: this.isTab,
                         isEnd: this.isEnd,
                         pointer: [...this.pointerInfoList.values()],

@@ -11,6 +11,7 @@ type ObservePointerMode = 'mouse' | 'touch' | 'pen' | null;
 type ObservePointerType = Exclude<ObservePointerMode, null>;
 interface OnGestureParameter {
     observeElement: HTMLElement;
+    path: EventTarget[];
     isTab: boolean;
     isEnd: boolean;
     gesture: ObserveGestureType;
@@ -193,6 +194,7 @@ export class GestureObserver {
                         {
                             gesture: this.onGeustreMode,
                             observeElement,
+                            path,
                             isTab: this.isTab,
                             isEnd: this.isEnd,
                             pointer: [...this.pointerInfoList.values()],
@@ -234,6 +236,7 @@ export class GestureObserver {
                         {
                             gesture: this.onGeustreMode,
                             observeElement,
+                            path,
                             isTab: this.isTab,
                             isEnd: this.isEnd,
                             pointer: [...this.pointerInfoList.values()],
