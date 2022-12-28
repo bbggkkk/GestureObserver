@@ -60,7 +60,8 @@ export class GestureObserver {
         const path = e.composedPath();
         requestAnimationFrame(() => {
             const { pointerId, pointerType, observeElement, clientX, clientY } = this.pointerHandler(e, path);
-            if (observeElement !== undefined &&
+            if (this.observePointer.has(pointerType) &&
+                observeElement !== undefined &&
                 (this.primaryType === e.pointerType ||
                     this.primaryType === null)) {
                 if (e.isPrimary === true) {
@@ -86,7 +87,9 @@ export class GestureObserver {
         const path = e.composedPath();
         requestAnimationFrame(() => {
             const { pointerId, pointerType, observeElement, target, clientX, clientY, } = this.pointerHandler(e, path);
-            if (this.isTab === true && this.primaryType === e.pointerType) {
+            if (this.observePointer.has(pointerType) &&
+                this.isTab === true &&
+                this.primaryType === e.pointerType) {
                 this.pointerList.set(pointerId, e);
                 const { x, y } = this.findActualPoint(pointerId, clientX, clientY);
                 this.pointerInfoList.set(pointerId, {
@@ -95,20 +98,23 @@ export class GestureObserver {
                     y,
                     observeElement: this.pointerInfoList.get(pointerId).observeElement,
                 });
-                if ((this.onGeustreMode === null ||
-                    this.onGeustreMode === 'pan-x') &&
+                if (this.observeGesture.has('pan-x') &&
+                    (this.onGeustreMode === null ||
+                        this.onGeustreMode === 'pan-x') &&
                     (this.thresholdMinX > x || this.thresholdMaxX < x) &&
                     this.pointerList.size === 1) {
                     this.onGeustreMode = 'pan-x';
                 }
-                if ((this.onGeustreMode === null ||
-                    this.onGeustreMode === 'pan-y') &&
+                if (this.observeGesture.has('pan-y') &&
+                    (this.onGeustreMode === null ||
+                        this.onGeustreMode === 'pan-y') &&
                     (this.thresholdMinY > y || this.thresholdMaxY < y) &&
                     this.pointerList.size === 1) {
                     this.onGeustreMode = 'pan-y';
                 }
-                if ((this.onGeustreMode === null ||
-                    this.onGeustreMode === 'pinch-zoom') &&
+                if (this.observeGesture.has('pinch-zoom') &&
+                    (this.onGeustreMode === null ||
+                        this.onGeustreMode === 'pinch-zoom') &&
                     this.pointerList.size > 1) {
                     this.onGeustreMode = 'pinch-zoom';
                 }
