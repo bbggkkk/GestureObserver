@@ -100,7 +100,7 @@ export class GestureObserver {
                     this.onGeustreMode = 'pinch-zoom';
                 }
                 if (this.onGeustreMode !== null) {
-                    this.lastPoint = this.getPoint(observeElement, target);
+                    this.lastPoint = this.getPoint(observeElement);
                     this.onGesture({
                         gesture: this.onGeustreMode,
                         primaryType: this.primaryType,
@@ -166,15 +166,18 @@ export class GestureObserver {
         let nowElement = target;
         let value = { x: offsetX, y: offsetY };
         while (nowElement !== observeElement) {
-            if (nowElement.parentElement === null)
+            if (!nowElement.parentElement ||
+                nowElement.parentElement === document.body) {
+                value = { x: offsetX, y: offsetY };
                 break;
+            }
             value.x += nowElement.offsetLeft;
             value.y += nowElement.offsetTop;
             nowElement = nowElement.parentElement;
         }
         return value;
     }
-    getPoint(observeElement, target) {
+    getPoint(observeElement) {
         if ((this.pointerInfoList.size > 0 &&
             this.onGeustreMode !== 'pinch-zoom') ||
             (this.pointerInfoList.size > 1 &&
@@ -193,7 +196,7 @@ export class GestureObserver {
                         iterator.next().value,
                         iterator.next().value,
                     ];
-                    const points = touchs.map((item) => this.findActualPoint(observeElement, target, item.offsetX, item.offsetY));
+                    const points = touchs.map((item) => this.findActualPoint(observeElement, item.target, item.offsetX, item.offsetY));
                     const minX = Math.min(points[0].x, points[1].x);
                     const maxX = Math.max(points[0].x, points[1].x);
                     const minY = Math.min(points[0].y, points[1].y);
@@ -218,7 +221,7 @@ export class GestureObserver {
                     spanA.style.top = `${points[0].y}px`;
                     spanB.style.left = `${points[1].x}px`;
                     spanB.style.top = `${points[1].y}px`;
-                    return { x, y, pinchLevel, xDiff };
+                    return { x, y, pinchLevel, xDiff: points[0].x };
                 }
             }
         }

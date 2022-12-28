@@ -212,10 +212,7 @@ export class GestureObserver {
                 }
 
                 if (this.onGeustreMode !== null) {
-                    this.lastPoint = this.getPoint(
-                        observeElement,
-                        target as HTMLElement
-                    );
+                    this.lastPoint = this.getPoint(observeElement);
                     this.onGesture(
                         {
                             gesture: this.onGeustreMode,
@@ -315,14 +312,20 @@ export class GestureObserver {
         let nowElement = target;
         let value = { x: offsetX, y: offsetY };
         while (nowElement !== observeElement) {
-            if (nowElement.parentElement === null) break;
+            if (
+                !nowElement.parentElement ||
+                nowElement.parentElement === document.body
+            ) {
+                value = { x: offsetX, y: offsetY };
+                break;
+            }
             value.x += nowElement.offsetLeft;
             value.y += nowElement.offsetTop;
             nowElement = nowElement.parentElement;
         }
         return value;
     }
-    protected getPoint(observeElement: HTMLElement, target: HTMLElement) {
+    protected getPoint(observeElement: HTMLElement) {
         if (
             (this.pointerInfoList.size > 0 &&
                 this.onGeustreMode !== 'pinch-zoom') ||
@@ -346,7 +349,7 @@ export class GestureObserver {
                     const points = touchs.map((item) =>
                         this.findActualPoint(
                             observeElement,
-                            target,
+                            item.target,
                             item.offsetX,
                             item.offsetY
                         )
@@ -384,9 +387,8 @@ export class GestureObserver {
                     spanA.style.top = `${points[0].y}px`;
                     spanB.style.left = `${points[1].x}px`;
                     spanB.style.top = `${points[1].y}px`;
-                    return { x, y, pinchLevel, xDiff };
+                    return { x, y, pinchLevel, xDiff: points[0].x };
                 }
-                // console.log(points);
             }
         }
         return { x: null, y: null, pinchLevel: null, xDiff: null };
