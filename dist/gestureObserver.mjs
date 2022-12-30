@@ -33,6 +33,7 @@ const DEFAULT_LAST_POINT = {
     rotate: null,
     rotateAbsolute: null,
     rotateStart: null,
+    rotateMovement: null,
 };
 export class GestureObserver {
     onGesture;
@@ -348,6 +349,7 @@ export class GestureObserver {
                         rotate: rotate,
                         rotateAbsolute,
                         rotateStart: this.rotateStart,
+                        rotateMovement: rotate - (this.lastPoint.rotate || 0),
                     });
                 }
             }

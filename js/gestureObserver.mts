@@ -40,6 +40,7 @@ export type PointType = {
     rotate: number | null;
     rotateAbsolute: number | null;
     rotateStart: number | null;
+    rotateMovement: number | null;
 };
 export interface OnGestureParameter {
     observeElement: HTMLElement;
@@ -130,6 +131,7 @@ const DEFAULT_LAST_POINT: PointType = {
     rotate: null,
     rotateAbsolute: null,
     rotateStart: null,
+    rotateMovement: null,
 };
 export class GestureObserver {
     protected onGesture: OnGestureType;
@@ -606,6 +608,7 @@ export class GestureObserver {
                         rotate: rotate,
                         rotateAbsolute,
                         rotateStart: this.rotateStart,
+                        rotateMovement: rotate - (this.lastPoint.rotate || 0),
                     });
                 }
             }
